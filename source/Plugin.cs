@@ -216,7 +216,6 @@ namespace LethalFixes
             if (__instance.IsOwner && __instance.heldItem != null)
             {
                 DropItemAndCallDropRPC?.Invoke(__instance, new object[] { __instance.heldItem.itemGrabbableObject.GetComponent<NetworkObject>(), false });
-                PluginLoader.logSource.LogInfo("[Hoarder Bug] Forced Item Drop Due To Death");
             }
         }
 
@@ -328,12 +327,11 @@ namespace LethalFixes
             if (ShouldDenyLocation(__instance.spawnDenialPoints, spawnPosition))
             {
                 bool newSpawnPositionFound = false;
-                List<Vector3> unusedSpawnPoints = spawnPoints.Select(x => x.transform.position).ToList();
+                List<Vector3> unusedSpawnPoints = spawnPoints.Select(x => x.transform.position).OrderBy(x => Vector3.Distance(spawnPosition, x)).ToList();
                 while (!newSpawnPositionFound && unusedSpawnPoints.Count > 0)
                 {
-                    int foundSpawnIndex = __instance.AnomalyRandom.Next(0, unusedSpawnPoints.Count);
-                    Vector3 foundSpawnPosition = unusedSpawnPoints[foundSpawnIndex];
-                    unusedSpawnPoints.RemoveAt(foundSpawnIndex);
+                    Vector3 foundSpawnPosition = unusedSpawnPoints[0];
+                    unusedSpawnPoints.RemoveAt(0);
                     if (!ShouldDenyLocation(__instance.spawnDenialPoints, foundSpawnPosition))
                     {
                         Vector3 foundSpawnPositionNav = __instance.GetRandomNavMeshPositionInBoxPredictable(foundSpawnPosition, 10f, default(NavMeshHit), __instance.AnomalyRandom, __instance.GetLayermaskForEnemySizeLimit(enemyType));
@@ -341,7 +339,7 @@ namespace LethalFixes
                         {
                             newSpawnPositionFound = true;
                             __result = foundSpawnPositionNav;
-                            PluginLoader.logSource.LogInfo($"[PositionWithDenialPointsChecked] Spawn Position Modified");
+                            //PluginLoader.logSource.LogInfo($"[PositionWithDenialPointsChecked] Spawn Position Modified");
                             break;
                         }
                     }
@@ -349,18 +347,18 @@ namespace LethalFixes
 
                 if (newSpawnPositionFound)
                 {
-                    PluginLoader.logSource.LogInfo($"[PositionWithDenialPointsChecked] Spawn Position Changed: {spawnPosition} > {__result}");
+                    //PluginLoader.logSource.LogInfo($"[PositionWithDenialPointsChecked] Spawn Position Changed: {spawnPosition} > {__result}");
                 }
                 else
                 {
                     __result = spawnPosition;
-                    PluginLoader.logSource.LogInfo($"[PositionWithDenialPointsChecked] Spawn Position Fallback: {spawnPosition} > {__result}");
+                    //PluginLoader.logSource.LogInfo($"[PositionWithDenialPointsChecked] Spawn Position Fallback: {spawnPosition} > {__result}");
                 }
             }
             else
             {
                 __result = spawnPosition;
-                PluginLoader.logSource.LogInfo($"[PositionWithDenialPointsChecked] Spawn Position Unchanged: {spawnPosition} > {__result}");
+                //PluginLoader.logSource.LogInfo($"[PositionWithDenialPointsChecked] Spawn Position Unchanged: {spawnPosition} > {__result}");
             }
             return false;
         }
