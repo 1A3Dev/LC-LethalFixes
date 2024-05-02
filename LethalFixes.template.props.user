@@ -2,7 +2,7 @@
 <Project>
     <PropertyGroup>
         <LethalCompanyDir>C:/Program Files (x86)/Steam/steamapps/common/Lethal Company/</LethalCompanyDir>
-        <TestProfileDir>$(AppData)/r2modmanPlus-local/LethalCompany/profiles/Test Fixes1A3/</TestProfileDir>
+        <TestProfileDir>$(AppData)/r2modmanPlus-local/LethalCompany/profiles/Test LethalFixes/</TestProfileDir>
         <ShouldCopyToTestProfile>false</ShouldCopyToTestProfile>
     </PropertyGroup>
 </Project>

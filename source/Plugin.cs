@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using BepInEx;
@@ -9,13 +10,16 @@ using HarmonyLib;
 using TMPro;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.AI;
+using UnityEngine.UIElements.UIR;
+using Object = UnityEngine.Object;
 
-namespace Fixes1A3
+namespace LethalFixes
 {
-    [BepInPlugin(modGUID, "Fixes1A3", modVersion)]
+    [BepInPlugin(modGUID, "LethalFixes", modVersion)]
     internal class PluginLoader : BaseUnityPlugin
     {
-        internal const string modGUID = "Dev1A3.Fixes1A3";
+        internal const string modGUID = "Dev1A3.LethalFixes";
         internal const string modVersion = "1.0.0";
 
         private readonly Harmony harmony = new Harmony(modGUID);
@@ -52,7 +56,7 @@ namespace Fixes1A3
         internal static ConfigEntry<bool> ExactItemScan;
         internal static void InitConfig()
         {
-            PluginLoader.Instance.BindConfig(ref ExactItemScan, "Settings", "Exact Item Scan", true, "Should the terminal scan command use the exact values?");
+            PluginLoader.Instance.BindConfig(ref ExactItemScan, "Settings", "Exact Item Scan", true, "Should the terminal scan command show the exact total value?");
         }
     }
 
@@ -233,33 +237,132 @@ namespace Fixes1A3
             if (modifiedDisplayText.Contains("[scanForItems]"))
             {
                 System.Random random = new System.Random(StartOfRound.Instance.randomMapSeed + 91);
-                int num3 = 0;
-                int num4 = 0;
+                int outsideTotal = 0;
+                int outsideValue = 0;
+                int insideTotal = 0;
+                int insideValue = 0;
                 GrabbableObject[] array = Object.FindObjectsByType<GrabbableObject>(FindObjectsSortMode.InstanceID);
                 for (int n = 0; n < array.Length; n++)
                 {
-                    if (array[n].itemProperties.isScrap && !array[n].isInShipRoom && !array[n].isInElevator)
+                    if (array[n].itemProperties.isScrap)
                     {
-                        if (FixesConfig.ExactItemScan.Value)
+                        if (!array[n].isInShipRoom && !array[n].isInElevator)
                         {
-                            num4 += array[n].scrapValue;
+                            if (FixesConfig.ExactItemScan.Value)
+                            {
+                                outsideValue += array[n].scrapValue;
+                            }
+                            else if (array[n].itemProperties.maxValue >= array[n].itemProperties.minValue)
+                            {
+                                outsideValue += Mathf.Clamp(random.Next(array[n].itemProperties.minValue, array[n].itemProperties.maxValue), array[n].scrapValue - 6 * outsideTotal, array[n].scrapValue + 9 * outsideTotal);
+                            }
+                            outsideTotal++;
                         }
-                        else if (array[n].itemProperties.maxValue >= array[n].itemProperties.minValue)
-                        {
-                            num4 += Mathf.Clamp(random.Next(array[n].itemProperties.minValue, array[n].itemProperties.maxValue), array[n].scrapValue - 6 * num3, array[n].scrapValue + 9 * num3);
-                        }
-                        num3++;
+                        //else
+                        //{
+                        //    if (FixesConfig.ExactItemScan.Value)
+                        //    {
+                        //        insideValue += array[n].scrapValue;
+                        //    }
+                        //    else if (array[n].itemProperties.maxValue >= array[n].itemProperties.minValue)
+                        //    {
+                        //        insideValue += Mathf.Clamp(random.Next(array[n].itemProperties.minValue, array[n].itemProperties.maxValue), array[n].scrapValue - 6 * insideTotal, array[n].scrapValue + 9 * insideTotal);
+                        //    }
+                        //    insideTotal++;
+                        //}
                     }
                 }
                 if (FixesConfig.ExactItemScan.Value)
                 {
-                    modifiedDisplayText = modifiedDisplayText.Replace("[scanForItems]", string.Format("There are {0} objects outside the ship, totalling at an exact value of ${1}.", num3, num4));
+                    modifiedDisplayText = modifiedDisplayText.Replace("[scanForItems]", string.Format("There are {0} objects outside the ship, totalling at an exact value of ${1}.", outsideTotal, outsideValue));
                 }
                 else
                 {
-                    modifiedDisplayText = modifiedDisplayText.Replace("[scanForItems]", string.Format("There are {0} objects outside the ship, totalling at an approximate value of ${1}.", num3, num4));
+                    modifiedDisplayText = modifiedDisplayText.Replace("[scanForItems]", string.Format("There are {0} objects outside the ship, totalling at an approximate value of ${1}.", outsideTotal, outsideValue));
                 }
             }
+        }
+
+        // [Host] Fix for enemies spawning inside outdoor objects
+        public static bool ShouldDenyLocation(GameObject[] spawnDenialPoints, Vector3 spawnPosition)
+        {
+            bool shouldDeny = false;
+
+            for (int j = 0; j < spawnDenialPoints.Length; j++)
+            {
+                if (Vector3.Distance(spawnPosition, spawnDenialPoints[j].transform.position) < 16f)
+                {
+                    shouldDeny = true;
+                }
+            }
+
+            if (!shouldDeny)
+            {
+                Dictionary<string, int> outsideObjectWidths = new Dictionary<string, int>();
+                SpawnableOutsideObject[] outsideObjectsRaw = RoundManager.Instance.currentLevel.spawnableOutsideObjects.Select(x => x.spawnableObject).ToArray();
+                foreach (SpawnableOutsideObject outsideObject in outsideObjectsRaw)
+                {
+                    outsideObjectWidths.Add(outsideObject.prefabToSpawn.name, outsideObject.objectWidth);
+                }
+                foreach (Transform child in RoundManager.Instance.mapPropsContainer.transform)
+                {
+                    string formattedName = child.name.Replace("(Clone)", "");
+                    if (outsideObjectWidths.ContainsKey(formattedName) && Vector3.Distance(spawnPosition, child.position) <= outsideObjectWidths[formattedName])
+                    {
+                        shouldDeny = true;
+                    }
+                }
+            }
+
+            return shouldDeny;
+        }
+        [HarmonyPatch(typeof(RoundManager), "PositionWithDenialPointsChecked")]
+        [HarmonyPrefix]
+        public static bool Fix_OutdoorEnemySpawnDenial(ref RoundManager __instance, ref Vector3 __result, Vector3 spawnPosition, GameObject[] spawnPoints, EnemyType enemyType)
+        {
+            if (spawnPoints.Length == 0)
+            {
+                return true;
+            }
+
+            if (ShouldDenyLocation(__instance.spawnDenialPoints, spawnPosition))
+            {
+                bool newSpawnPositionFound = false;
+                List<Vector3> unusedSpawnPoints = spawnPoints.Select(x => x.transform.position).ToList();
+                while (!newSpawnPositionFound && unusedSpawnPoints.Count > 0)
+                {
+                    int foundSpawnIndex = __instance.AnomalyRandom.Next(0, unusedSpawnPoints.Count);
+                    Vector3 foundSpawnPosition = unusedSpawnPoints[foundSpawnIndex];
+                    unusedSpawnPoints.RemoveAt(foundSpawnIndex);
+                    if (!ShouldDenyLocation(__instance.spawnDenialPoints, foundSpawnPosition))
+                    {
+                        Vector3 foundSpawnPositionNav = __instance.GetRandomNavMeshPositionInBoxPredictable(foundSpawnPosition, 10f, default(NavMeshHit), __instance.AnomalyRandom, __instance.GetLayermaskForEnemySizeLimit(enemyType));
+                        if (!ShouldDenyLocation(__instance.spawnDenialPoints, foundSpawnPositionNav))
+                        {
+                            newSpawnPositionFound = true;
+                            __result = foundSpawnPositionNav;
+                            PluginLoader.logSource.LogInfo($"[PositionWithDenialPointsChecked] Spawn Position Modified");
+                            break;
+                        }
+                    }
+                }
+
+                if (newSpawnPositionFound)
+                {
+                    PluginLoader.logSource.LogInfo($"[PositionWithDenialPointsChecked] Spawn Position Changed: {spawnPosition} > {__result}");
+                }
+                else
+                {
+                    __result = spawnPosition;
+                    PluginLoader.logSource.LogInfo($"[PositionWithDenialPointsChecked] Spawn Position Fallback: {spawnPosition} > {__result}");
+                }
+            }
+            else
+            {
+                __result = spawnPosition;
+                PluginLoader.logSource.LogInfo($"[PositionWithDenialPointsChecked] Spawn Position Unchanged: {spawnPosition} > {__result}");
+            }
+            return false;
         }
 
         // Replace button text of toggle test room & invincibility to include the state

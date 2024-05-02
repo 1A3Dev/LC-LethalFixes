@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <AssemblyName>Fixes1A3</AssemblyName>
+        <AssemblyName>LethalFixes</AssemblyName>
         <TargetFramework>netstandard2.1</TargetFramework>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
@@ -9,8 +9,8 @@
 
     <PropertyGroup>
         <IsThunderstorePackable>true</IsThunderstorePackable>
-        <ThunderstoreName>Fixes1A3</ThunderstoreName>
-        <ThunderstoreDescription>Makes players show up on the Steam "recently played with" list.</ThunderstoreDescription>
+        <ThunderstoreName>LethalFixes</ThunderstoreName>
+        <ThunderstoreDescription>Fixes for a bunch of common issues.</ThunderstoreDescription>
         <ThunderstoreIconPath>$(ProjectDir)assets/icons/icon.png</ThunderstoreIconPath>
         <HasBepInPlugin>true</HasBepInPlugin>
     </PropertyGroup>
