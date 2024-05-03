@@ -44,6 +44,11 @@ namespace LethalFixes
 
             Assembly patches = Assembly.GetExecutingAssembly();
             harmony.PatchAll(patches);
+
+            // Dissonance Lag Fix
+            Dissonance.Logs.SetLogLevel(Dissonance.LogCategory.Recording, Dissonance.LogLevel.Error);
+            Dissonance.Logs.SetLogLevel(Dissonance.LogCategory.Playback, Dissonance.LogLevel.Error);
+            Dissonance.Logs.SetLogLevel(Dissonance.LogCategory.Network, Dissonance.LogLevel.Error);
         }
 
         public void BindConfig<T>(ref ConfigEntry<T> config, string section, string key, T defaultValue, string description = "")
@@ -59,6 +64,7 @@ namespace LethalFixes
         internal static ConfigEntry<bool> ModTerminalScan;
         internal static ConfigEntry<bool> SpikeTrapActivateSound;
         internal static ConfigEntry<bool> SpikeTrapDeactivateSound;
+        internal static ConfigEntry<bool> SpikeTrapSafetyInverse;
         internal static void InitConfig()
         {
             PluginLoader.Instance.BindConfig(ref NearActivityDistance, "Settings", "Nearby Activity Distance", 7.7f, "How close should an enemy be to an entrance for it to be detected as nearby activity?");
@@ -67,6 +73,7 @@ namespace LethalFixes
             PluginLoader.Instance.BindConfig(ref ModTerminalScan, "Compatibility", "Terminal Scan Command", true, "Should the terminal scan command be modified by this mod?");
             PluginLoader.Instance.BindConfig(ref SpikeTrapActivateSound, "Spike Trap", "Sound On Enable", false, "Should spike traps make a sound when re-enabled after being disabled via the terminal?");
             PluginLoader.Instance.BindConfig(ref SpikeTrapDeactivateSound, "Spike Trap", "Sound On Disable", true, "Should spike traps make a sound when disabled via the terminal?");
+            PluginLoader.Instance.BindConfig(ref SpikeTrapSafetyInverse, "Spike Trap", "Inverse Teleport Safety", false, "Should spike traps have the safe period if a player inverse teleports underneath?");
         }
     }
 
@@ -122,6 +129,34 @@ namespace LethalFixes
             nextTimeSync.SetValue(TimeOfDay.Instance, 0);
         }
 
+        // [Client] Fixed spike trap entrance safety period not existing when inverse teleporting
+        public static Dictionary<int, float> lastInverseTime = new Dictionary<int, float>();
+        public static Dictionary<int, Vector3> lastInversePos = new Dictionary<int, Vector3>();
+        [HarmonyPatch(typeof(ShipTeleporter), "TeleportPlayerOutWithInverseTeleporter")]
+        [HarmonyPostfix]
+        public static void Fix_SpikeTrapSafety_InverseTeleport(int playerObj, Vector3 teleportPos)
+        {
+            if (!StartOfRound.Instance.allPlayerScripts[playerObj].isPlayerDead)
+            {
+                if (lastInversePos.ContainsKey(playerObj))
+                {
+                    lastInversePos[playerObj] = teleportPos;
+                }
+                else
+                {
+                    lastInversePos.Add(playerObj, teleportPos);
+                }
+                if (lastInverseTime.ContainsKey(playerObj))
+                {
+                    lastInverseTime[playerObj] = Time.realtimeSinceStartup;
+                }
+                else
+                {
+                    lastInverseTime.Add(playerObj, Time.realtimeSinceStartup);
+                }
+            }
+        }
+
         // [Host] Fixed spike trap entrance safety period activating when exiting the facility instead of when entering
         internal static FieldInfo nearEntrance = AccessTools.Field(typeof(SpikeRoofTrap), "nearEntrance");
         internal static AudioClip spikeTrapActivateSound = null;
@@ -164,10 +199,43 @@ namespace LethalFixes
         {
             if (__instance.trapActive)
             {
+                float safePeriodTime = 1.2f;
+                float safePeriodDistance = 5f;
+
                 EntranceTeleport nearEntranceVal = (EntranceTeleport)nearEntrance.GetValue(__instance);
-                if (nearEntranceVal != null && Time.realtimeSinceStartup - nearEntranceVal.timeAtLastUse < 1.2f)
+                if (nearEntranceVal != null && Time.realtimeSinceStartup - nearEntranceVal.timeAtLastUse < safePeriodTime)
                 {
                     __instance.timeSinceMovingUp = Time.realtimeSinceStartup;
+                }
+                else if (FixesConfig.SpikeTrapSafetyInverse.Value)
+                {
+                    bool slamOnIntervalsVal = (bool)slamOnIntervals.GetValue(__instance);
+                    if (slamOnIntervalsVal)
+                    {
+                        foreach (KeyValuePair<int, float> keyValue in lastInverseTime)
+                        {
+                            if (Time.realtimeSinceStartup - keyValue.Value < safePeriodTime)
+                            {
+                                if (lastInversePos.ContainsKey(keyValue.Key) && Vector3.Distance(lastInversePos[keyValue.Key], __instance.laserEye.position) <= safePeriodDistance)
+                                {
+                                    __instance.timeSinceMovingUp = Time.realtimeSinceStartup;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // Player Detection
+                        int playerClientId = (int)GameNetworkManager.Instance.localPlayerController.playerClientId;
+                        if (lastInverseTime.ContainsKey(playerClientId) && Time.realtimeSinceStartup - lastInverseTime[playerClientId] < safePeriodTime)
+                        {
+                            if (lastInversePos.ContainsKey(playerClientId) && Vector3.Distance(lastInversePos[playerClientId], __instance.laserEye.position) <= safePeriodDistance)
+                            {
+                                __instance.timeSinceMovingUp = Time.realtimeSinceStartup;
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -295,41 +363,67 @@ namespace LethalFixes
         }
 
         // [Host] Fixed outdoor enemies being able to spawn inside the outdoor objects (rocks/pumpkins etc)
+        internal static Dictionary<string, int> outsideObjectWidths = new Dictionary<string, int>();
+        internal static List<Transform> cachedOutsideObjects = new List<Transform>();
         public static bool ShouldDenyLocation(GameObject[] spawnDenialPoints, Vector3 spawnPosition)
         {
             bool shouldDeny = false;
 
+            // Block Spawning In The Ship
             for (int j = 0; j < spawnDenialPoints.Length; j++)
             {
                 if (Vector3.Distance(spawnPosition, spawnDenialPoints[j].transform.position) < 16f)
                 {
                     shouldDeny = true;
+                    break;
                 }
             }
 
             if (!shouldDeny)
             {
-                Dictionary<string, int> outsideObjectWidths = new Dictionary<string, int>();
-                SpawnableOutsideObject[] outsideObjectsRaw = RoundManager.Instance.currentLevel.spawnableOutsideObjects.Select(x => x.spawnableObject).ToArray();
-                foreach (SpawnableOutsideObject outsideObject in outsideObjectsRaw)
-                {
-                    outsideObjectWidths.Add(outsideObject.prefabToSpawn.name, outsideObject.objectWidth);
-                }
-                foreach (Transform child in RoundManager.Instance.mapPropsContainer.transform)
+                // Block Spawning In Rocks/Pumpkins etc
+                foreach (Transform child in cachedOutsideObjects)
                 {
                     string formattedName = child.name.Replace("(Clone)", "");
                     if (outsideObjectWidths.ContainsKey(formattedName) && Vector3.Distance(spawnPosition, child.position) <= outsideObjectWidths[formattedName])
                     {
                         shouldDeny = true;
+                        break;
                     }
                 }
             }
 
             return shouldDeny;
         }
+        [HarmonyPatch(typeof(RoundManager), "SpawnMapObjects")]
+        [HarmonyPostfix]
+        public static void Fix_OutdoorEnemySpawn_CacheValues(RoundManager __instance)
+        {
+            outsideObjectWidths.Clear();
+            cachedOutsideObjects.Clear();
+
+            if (__instance.currentLevel.spawnableMapObjects.Length >= 1)
+            {
+                SpawnableOutsideObject[] outsideObjectsRaw = __instance.currentLevel.spawnableOutsideObjects.Select(x => x.spawnableObject).ToArray();
+                foreach (SpawnableOutsideObject outsideObject in outsideObjectsRaw)
+                {
+                    outsideObjectWidths.Add(outsideObject.prefabToSpawn.name, outsideObject.objectWidth);
+                }
+
+                foreach (Transform child in __instance.mapPropsContainer.transform)
+                {
+                    if (outsideObjectWidths.ContainsKey(child.name.Replace("(Clone)", "")))
+                    {
+                        cachedOutsideObjects.Add(child);
+                    }
+                }
+            }
+
+            PluginLoader.logSource.LogInfo($"Cached {cachedOutsideObjects.Count} Outside Map Objects");
+        }
         [HarmonyPatch(typeof(RoundManager), "PositionWithDenialPointsChecked")]
         [HarmonyPrefix]
-        public static bool Fix_OutdoorEnemySpawnDenial(ref RoundManager __instance, ref Vector3 __result, Vector3 spawnPosition, GameObject[] spawnPoints, EnemyType enemyType)
+        public static bool Fix_OutdoorEnemySpawn_Denial(ref RoundManager __instance, ref Vector3 __result, Vector3 spawnPosition, GameObject[] spawnPoints, EnemyType enemyType)
         {
             if (spawnPoints.Length == 0)
             {
@@ -417,6 +511,13 @@ namespace LethalFixes
                 }
             }
             return true;
+        }
+
+        [HarmonyPatch(typeof(PlayerControllerB), "Update")]
+        [HarmonyPostfix]
+        public static void Fix_NegativeCarryWeight(PlayerControllerB __instance)
+        {
+            if (__instance.carryWeight < 1) __instance.carryWeight = 1;
         }
 
         // Replace button text of toggle test room & invincibility to include the state
