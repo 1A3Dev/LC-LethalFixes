@@ -259,12 +259,26 @@ namespace LethalFixes
                     {
                         if (!array[n].isInShipRoom && !array[n].isInElevator)
                         {
-                            outsideValue += array[n].scrapValue;
+                            if (FixesConfig.ExactItemScan.Value)
+                            {
+                                outsideValue += array[n].scrapValue;
+                            }
+                            else if (array[n].itemProperties.maxValue >= array[n].itemProperties.minValue)
+                            {
+                                outsideValue += Mathf.Clamp(random.Next(array[n].itemProperties.minValue, array[n].itemProperties.maxValue), array[n].scrapValue - 6 * outsideTotal, array[n].scrapValue + 9 * outsideTotal);
+                            }
                             outsideTotal++;
                         }
                         else
                         {
-                            insideValue += array[n].scrapValue;
+                            if (FixesConfig.ExactItemScan.Value)
+                            {
+                                insideValue += array[n].scrapValue;
+                            }
+                            else if (array[n].itemProperties.maxValue >= array[n].itemProperties.minValue)
+                            {
+                                insideValue += Mathf.Clamp(random.Next(array[n].itemProperties.minValue, array[n].itemProperties.maxValue), array[n].scrapValue - 6 * insideTotal, array[n].scrapValue + 9 * insideTotal);
+                            }
                             insideTotal++;
                         }
                     }
@@ -275,8 +289,9 @@ namespace LethalFixes
                 }
                 else
                 {
-                    outsideValue = random.Next(outsideValue - 300, outsideValue + 300);
-                    insideValue = random.Next(insideValue - 300, insideValue + 300);
+                    //int randomMultiplier = 1000;
+                    //outsideValue = Math.Max(0, random.Next(outsideValue - randomMultiplier, outsideValue + randomMultiplier));
+                    //insideValue = Math.Max(0, random.Next(insideValue - randomMultiplier, insideValue + randomMultiplier));
                     modifiedDisplayText = modifiedDisplayText.Replace("[scanForItems]", string.Format("There are {0} objects outside the ship, totalling at an approximate value of ${1}.", outsideTotal, outsideValue));
                 }
             }
