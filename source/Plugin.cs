@@ -73,7 +73,7 @@ namespace LethalFixes
     [HarmonyPatch]
     internal static class FixesPatch
     {
-        // [Host] Fix for dead enemies still opening doors
+        // [Host] Fixed dead enemies being able to open doors
         [HarmonyPatch(typeof(DoorLock), "OnTriggerStay")]
         [HarmonyPrefix]
         public static bool Fix_DeadEnemyDoors(Collider other)
@@ -89,7 +89,7 @@ namespace LethalFixes
             return true;
         }
 
-        // [Host] Fix for newly spawned items not attracting lightning
+        // [Host] Fixed metal items spawned mid-round not attracting lightning until the next round
         private static FieldInfo metalObjects = AccessTools.Field(typeof(StormyWeather), "metalObjects");
         [HarmonyPatch(typeof(GrabbableObject), "Start")]
         [HarmonyPostfix]
@@ -113,7 +113,7 @@ namespace LethalFixes
             }
         }
 
-        // [Host] Fix for flooded weather only working during the first day of each session
+        // [Host] Fixed flooded weather only working for the first day of each session
         private static FieldInfo nextTimeSync = AccessTools.Field(typeof(TimeOfDay), "nextTimeSync");
         [HarmonyPatch(typeof(StartOfRound), "ResetStats")]
         [HarmonyPostfix]
@@ -122,7 +122,7 @@ namespace LethalFixes
             nextTimeSync.SetValue(TimeOfDay.Instance, 0);
         }
 
-        // [Host] Fix to make spike trap safety cooldown apply when entering instead of exiting
+        // [Host] Fixed spike trap entrance safety period activating when exiting the facility instead of when entering
         internal static FieldInfo nearEntrance = AccessTools.Field(typeof(SpikeRoofTrap), "nearEntrance");
         internal static AudioClip spikeTrapActivateSound = null;
         internal static AudioClip spikeTrapDeactivateSound = null;
@@ -147,14 +147,32 @@ namespace LethalFixes
             spikeTrapActivateSound = Resources.FindObjectsOfTypeAll<Landmine>()?[0]?.mineDeactivate;
             spikeTrapDeactivateSound = Resources.FindObjectsOfTypeAll<Landmine>()?[0]?.mineDeactivate;
 
+            // It would be nice if it was possible to turn off the red lights instead of just the emissive
             Light trapLight = __instance.transform.parent.Find("Spot Light").GetComponent<Light>();
             if (trapLight != null)
             {
                 trapLight.intensity = 5;
             }
         }
-        // [Client] Adds a sound when spike traps are activated/deactivated
-        internal static FieldInfo laserLight = AccessTools.Field(typeof(SpikeRoofTrap), "laserLight");
+
+        // [Client] Fixed spike trap entrance safety period not preventing death if the trap slams at the exact same time that you enter
+        // [Client] Fixed player detection spike trap having no entrance safety period
+        internal static FieldInfo slamOnIntervals = AccessTools.Field(typeof(SpikeRoofTrap), "slamOnIntervals");
+        [HarmonyPatch(typeof(SpikeRoofTrap), "Update")]
+        [HarmonyPrefix]
+        public static void Fix_SpikeTrapSafety_Update(ref SpikeRoofTrap __instance)
+        {
+            if (__instance.trapActive)
+            {
+                EntranceTeleport nearEntranceVal = (EntranceTeleport)nearEntrance.GetValue(__instance);
+                if (nearEntranceVal != null && Time.realtimeSinceStartup - nearEntranceVal.timeAtLastUse < 1.2f)
+                {
+                    __instance.timeSinceMovingUp = Time.realtimeSinceStartup;
+                }
+            }
+        }
+
+        // [Client] Fixed spike traps having no indication when disabled via the terminal
         [HarmonyPatch(typeof(SpikeRoofTrap), "ToggleSpikesEnabledLocalClient")]
         [HarmonyPostfix]
         public static void Fix_SpikeTrapSafety_ToggleSound(SpikeRoofTrap __instance, bool enabled)
@@ -182,23 +200,29 @@ namespace LethalFixes
                 trapLight.enabled = enabled;
             }
         }
-        // [Client] Fix to make spike trap safety cooldown also apply to player detection traps & fixed the traps killing you if you enter whilst they are mid-slamming
-        internal static FieldInfo slamOnIntervals = AccessTools.Field(typeof(SpikeRoofTrap), "slamOnIntervals");
-        [HarmonyPatch(typeof(SpikeRoofTrap), "Update")]
-        [HarmonyPrefix]
-        public static void Fix_SpikeTrapSafety_Update(ref SpikeRoofTrap __instance)
+
+        // [Host] Fixed the hoarder bug not dropping the held item if it's killed too quickly
+        internal static MethodInfo DropItemAndCallDropRPC = AccessTools.Method(typeof(HoarderBugAI), "DropItemAndCallDropRPC");
+        [HarmonyPatch(typeof(HoarderBugAI), "KillEnemy")]
+        [HarmonyPostfix]
+        public static void Fix_HoarderDeathItem(HoarderBugAI __instance)
         {
-            if (__instance.trapActive)
+            if (__instance.IsOwner && __instance.heldItem != null)
             {
-                EntranceTeleport nearEntranceVal = (EntranceTeleport)nearEntrance.GetValue(__instance);
-                if (nearEntranceVal != null && Time.realtimeSinceStartup - nearEntranceVal.timeAtLastUse < 1.2f)
-                {
-                    __instance.timeSinceMovingUp = Time.realtimeSinceStartup;
-                }
+                DropItemAndCallDropRPC?.Invoke(__instance, new object[] { __instance.heldItem.itemGrabbableObject.GetComponent<NetworkObject>(), false });
             }
         }
 
-        // [Client] Fix for start lever being slow when routing to the company building
+        // [Client] Fixed the forest giant being able to insta-kill when spawning
+        [HarmonyPatch(typeof(ForestGiantAI), "OnCollideWithPlayer")]
+        [HarmonyPrefix]
+        public static bool Fix_GiantInstantKill(ForestGiantAI __instance, Collider other)
+        {
+            PlayerControllerB playerController = __instance.MeetsStandardPlayerCollisionConditions(other);
+            return playerController != null;
+        }
+
+        // [Client] Fixed the start lever cooldown not being reset on the deadline if you initially try routing to a regular moon
         [HarmonyPatch(typeof(StartMatchLever), "BeginHoldingInteractOnLever")]
         [HarmonyPostfix]
         public static void Fix_LeverDeadline(ref StartMatchLever __instance)
@@ -213,28 +237,7 @@ namespace LethalFixes
             }
         }
 
-        // [Host] Fix the hoarder bug not dropping the held item if it's killed before it can switch state
-        internal static MethodInfo DropItemAndCallDropRPC = AccessTools.Method(typeof(HoarderBugAI), "DropItemAndCallDropRPC");
-        [HarmonyPatch(typeof(HoarderBugAI), "KillEnemy")]
-        [HarmonyPostfix]
-        public static void Fix_HoarderDeathItem(HoarderBugAI __instance)
-        {
-            if (__instance.IsOwner && __instance.heldItem != null)
-            {
-                DropItemAndCallDropRPC?.Invoke(__instance, new object[] { __instance.heldItem.itemGrabbableObject.GetComponent<NetworkObject>(), false });
-            }
-        }
-
-        // [Client] Fix forest giant being able to insta-kill.
-        [HarmonyPatch(typeof(ForestGiantAI), "OnCollideWithPlayer")]
-        [HarmonyPrefix]
-        public static bool Fix_GiantInstantKill(ForestGiantAI __instance, Collider other)
-        {
-            PlayerControllerB playerController = __instance.MeetsStandardPlayerCollisionConditions(other);
-            return playerController != null;
-        }
-
-        // [Client] Fix randomization of terminal scan command
+        // [Client] Fixed the terminal scan command including items inside the ship in the calculation of the approximate value
         [HarmonyPatch(typeof(Terminal), "TextPostProcess")]
         [HarmonyPrefix]
         public static void Fix_TerminalScan(ref string modifiedDisplayText)
@@ -291,7 +294,7 @@ namespace LethalFixes
             }
         }
 
-        // [Host] Fix for enemies spawning inside outdoor objects
+        // [Host] Fixed outdoor enemies being able to spawn inside the outdoor objects (rocks/pumpkins etc)
         public static bool ShouldDenyLocation(GameObject[] spawnDenialPoints, Vector3 spawnPosition)
         {
             bool shouldDeny = false;
@@ -372,7 +375,7 @@ namespace LethalFixes
             return false;
         }
 
-        // Fix for dead enemies showing as near activity
+        // [Client] Fixed entrance nearby activity including dead enemies
         internal static FieldInfo entranceExitPoint = AccessTools.Field(typeof(EntranceTeleport), "exitPoint");
         internal static FieldInfo entranceTriggerScript = AccessTools.Field(typeof(EntranceTeleport), "triggerScript");
         internal static FieldInfo checkForEnemiesInterval = AccessTools.Field(typeof(EntranceTeleport), "checkForEnemiesInterval");
