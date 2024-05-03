@@ -23,6 +23,7 @@ This mod fixes a bunch of common Lethal Company issues:
 - [Client] Fixed the terminal scan command including items inside the ship in the calculation of the approximate value.
 - [Client] Fixed spike traps having safety cooldown not applying to the player detection variant.
 - [Client] Fixed spike traps having no indication when disabled via the terminal (they now play the landmine deactivate sound and have the light emissive disabled).
+- [Client] Fixed entrance nearby activity including dead enemies.
 
 ### Compatibility
 
@@ -31,13 +32,12 @@ This mod fixes a bunch of common Lethal Company issues:
 - Works Well With:
   - N/A
 - Not Compatible With:
-  - N/A
+  - Symbiosis
+    - Disabling the ItemDeathDrop option in the Symbiosis config fixes the compatibility issue.
 
 ### Configuration
 
-The mod has some configuration options including:
-
-- Toggle for whether the terminal scan command shows the exact or an approximate value.
+The mod has a few configuration options!
 
 ### Credits
 

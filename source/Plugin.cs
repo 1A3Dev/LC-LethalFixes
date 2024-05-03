@@ -53,10 +53,22 @@ namespace LethalFixes
     }
     internal class FixesConfig
     {
+        internal static ConfigEntry<float> NearActivityDistance;
         internal static ConfigEntry<bool> ExactItemScan;
+        internal static ConfigEntry<bool> DebugMenuAlphabetical;
+        internal static ConfigEntry<bool> ModTerminalScan;
+        internal static ConfigEntry<bool> SpikeTrapSafetyPlayer;
+        internal static ConfigEntry<bool> SpikeTrapActivateSound;
+        internal static ConfigEntry<bool> SpikeTrapDeactivateSound;
         internal static void InitConfig()
         {
-            PluginLoader.Instance.BindConfig(ref ExactItemScan, "Settings", "Exact Item Scan", true, "Should the terminal scan command show the exact total value?");
+            PluginLoader.Instance.BindConfig(ref NearActivityDistance, "Settings", "Nearby Activity Distance", 7.7f, "How close should an enemy be to an entrance for it to be detected as nearby activity?");
+            PluginLoader.Instance.BindConfig(ref ExactItemScan, "Settings", "Exact Item Scan", false, "Should the terminal scan command show the exact total value?");
+            PluginLoader.Instance.BindConfig(ref DebugMenuAlphabetical, "Settings", "Alphabetical Debug Menu", false, "Should the enemy & item list in the base game debug menu be alphabetical? This does not work properly if you have multiple items with the same name!");
+            PluginLoader.Instance.BindConfig(ref ModTerminalScan, "Compatibility", "Terminal Scan Command", true, "Should the terminal scan command be modified by this mod?");
+            PluginLoader.Instance.BindConfig(ref SpikeTrapSafetyPlayer, "Spike Trap", "Player Detection Safety", true, "Should spike traps with player detection have the entrance safe period?");
+            PluginLoader.Instance.BindConfig(ref SpikeTrapActivateSound, "Spike Trap", "Sound On Enable", false, "Should spike traps make a sound when re-enabled after being disabled via the terminal?");
+            PluginLoader.Instance.BindConfig(ref SpikeTrapDeactivateSound, "Spike Trap", "Sound On Disable", true, "Should spike traps make a sound when disabled via the terminal?");
         }
     }
 
@@ -134,7 +146,7 @@ namespace LethalFixes
                 }
             }
 
-            //spikeTrapActivateSound = Resources.FindObjectsOfTypeAll<Landmine>()?[0]?.mineDeactivate;
+            spikeTrapActivateSound = Resources.FindObjectsOfTypeAll<Landmine>()?[0]?.mineDeactivate;
             spikeTrapDeactivateSound = Resources.FindObjectsOfTypeAll<Landmine>()?[0]?.mineDeactivate;
 
             Light trapLight = __instance.transform.parent.Find("Spot Light").GetComponent<Light>();
@@ -151,7 +163,7 @@ namespace LethalFixes
         {
             if (enabled)
             {
-                if (spikeTrapActivateSound != null)
+                if (FixesConfig.SpikeTrapActivateSound.Value && spikeTrapActivateSound != null)
                 {
                     __instance.spikeTrapAudio.PlayOneShot(spikeTrapActivateSound);
                     WalkieTalkie.TransmitOneShotAudio(__instance.spikeTrapAudio, spikeTrapActivateSound, 1f);
@@ -159,7 +171,7 @@ namespace LethalFixes
             }
             else
             {
-                if (spikeTrapDeactivateSound != null)
+                if (FixesConfig.SpikeTrapDeactivateSound.Value && spikeTrapDeactivateSound != null)
                 {
                     __instance.spikeTrapAudio.PlayOneShot(spikeTrapDeactivateSound);
                     WalkieTalkie.TransmitOneShotAudio(__instance.spikeTrapAudio, spikeTrapDeactivateSound, 1f);
@@ -178,7 +190,7 @@ namespace LethalFixes
         [HarmonyPrefix]
         public static void Fix_SpikeTrapSafety_Update(ref SpikeRoofTrap __instance)
         {
-            if (__instance.trapActive && !__instance.slammingDown)
+            if (__instance.trapActive && !__instance.slammingDown && FixesConfig.SpikeTrapSafetyPlayer.Value)
             {
                 bool slamOnIntervalsVal = (bool)slamOnIntervals.GetValue(__instance);
                 if (!slamOnIntervalsVal)
@@ -233,7 +245,7 @@ namespace LethalFixes
         [HarmonyPrefix]
         public static void Fix_TerminalScan(ref string modifiedDisplayText)
         {
-            if (modifiedDisplayText.Contains("[scanForItems]"))
+            if (FixesConfig.ModTerminalScan.Value && modifiedDisplayText.Contains("[scanForItems]"))
             {
                 System.Random random = new System.Random(StartOfRound.Instance.randomMapSeed + 91);
                 int outsideTotal = 0;
@@ -247,28 +259,14 @@ namespace LethalFixes
                     {
                         if (!array[n].isInShipRoom && !array[n].isInElevator)
                         {
-                            if (FixesConfig.ExactItemScan.Value)
-                            {
-                                outsideValue += array[n].scrapValue;
-                            }
-                            else if (array[n].itemProperties.maxValue >= array[n].itemProperties.minValue)
-                            {
-                                outsideValue += Mathf.Clamp(random.Next(array[n].itemProperties.minValue, array[n].itemProperties.maxValue), array[n].scrapValue - 6 * outsideTotal, array[n].scrapValue + 9 * outsideTotal);
-                            }
+                            outsideValue += array[n].scrapValue;
                             outsideTotal++;
                         }
-                        //else
-                        //{
-                        //    if (FixesConfig.ExactItemScan.Value)
-                        //    {
-                        //        insideValue += array[n].scrapValue;
-                        //    }
-                        //    else if (array[n].itemProperties.maxValue >= array[n].itemProperties.minValue)
-                        //    {
-                        //        insideValue += Mathf.Clamp(random.Next(array[n].itemProperties.minValue, array[n].itemProperties.maxValue), array[n].scrapValue - 6 * insideTotal, array[n].scrapValue + 9 * insideTotal);
-                        //    }
-                        //    insideTotal++;
-                        //}
+                        else
+                        {
+                            insideValue += array[n].scrapValue;
+                            insideTotal++;
+                        }
                     }
                 }
                 if (FixesConfig.ExactItemScan.Value)
@@ -277,6 +275,8 @@ namespace LethalFixes
                 }
                 else
                 {
+                    outsideValue = random.Next(outsideValue - 300, outsideValue + 300);
+                    insideValue = random.Next(insideValue - 300, insideValue + 300);
                     modifiedDisplayText = modifiedDisplayText.Replace("[scanForItems]", string.Format("There are {0} objects outside the ship, totalling at an approximate value of ${1}.", outsideTotal, outsideValue));
                 }
             }
@@ -363,6 +363,50 @@ namespace LethalFixes
             return false;
         }
 
+        // Fix for dead enemies showing as near activity
+        internal static FieldInfo entranceExitPoint = AccessTools.Field(typeof(EntranceTeleport), "exitPoint");
+        internal static FieldInfo entranceTriggerScript = AccessTools.Field(typeof(EntranceTeleport), "triggerScript");
+        internal static FieldInfo checkForEnemiesInterval = AccessTools.Field(typeof(EntranceTeleport), "checkForEnemiesInterval");
+        internal static FieldInfo enemyNearLastCheck = AccessTools.Field(typeof(EntranceTeleport), "enemyNearLastCheck");
+        [HarmonyPatch(typeof(EntranceTeleport), "Update")]
+        [HarmonyPrefix]
+        public static bool Fix_NearActivityDead(EntranceTeleport __instance)
+        {
+            InteractTrigger triggerScriptVal = (InteractTrigger)entranceTriggerScript.GetValue(__instance);
+            float checkForEnemiesIntervalVal = (float)checkForEnemiesInterval.GetValue(__instance);
+            if (__instance.isEntranceToBuilding && triggerScriptVal != null && checkForEnemiesIntervalVal <= 0f)
+            {
+                Transform exitPointVal = (Transform)entranceExitPoint.GetValue(__instance);
+                if (exitPointVal != null)
+                {
+                    bool flag = false;
+                    for (int i = 0; i < RoundManager.Instance.SpawnedEnemies.Count; i++)
+                    {
+                        EnemyAI enemyAI = RoundManager.Instance.SpawnedEnemies[i];
+                        if (!enemyAI.isEnemyDead && !enemyAI.isOutside && Vector3.Distance(enemyAI.transform.position, exitPointVal.transform.position) < FixesConfig.NearActivityDistance.Value)
+                        {
+                            flag = true;
+                            break;
+                        }
+                    }
+                    bool enemyNearLastCheckVal = (bool)enemyNearLastCheck.GetValue(__instance);
+                    if (enemyNearLastCheckVal)
+                    {
+                        enemyNearLastCheck.SetValue(__instance, false);
+                        triggerScriptVal.hoverTip = "Enter: [LMB]";
+                    }
+                    else if (flag)
+                    {
+                        enemyNearLastCheck.SetValue(__instance, true);
+                        triggerScriptVal.hoverTip = "[Near activity detected!]";
+                    }
+
+                    return false;
+                }
+            }
+            return true;
+        }
+
         // Replace button text of toggle test room & invincibility to include the state
         [HarmonyPatch(typeof(QuickMenuManager), "OpenQuickMenu")]
         [HarmonyPostfix]
@@ -393,6 +437,11 @@ namespace LethalFixes
         [HarmonyPrefix]
         public static bool Fix_DebugMenu_ItemOrder_Init(QuickMenuManager __instance)
         {
+            if (!FixesConfig.DebugMenuAlphabetical.Value)
+            {
+                return true;
+            }
+
             __instance.allItemsDropdown.ClearOptions();
             debugItemList = StartOfRound.Instance.allItemsList.itemsList.Select(x => x.itemName).OrderBy(x => x).ToList();
             __instance.allItemsDropdown.AddOptions(debugItemList);
@@ -402,8 +451,11 @@ namespace LethalFixes
         [HarmonyPrefix]
         public static void Fix_DebugMenu_ItemOrder_Spawn(ref int itemId)
         {
-            int itemIdRaw = itemId;
-            itemId = StartOfRound.Instance.allItemsList.itemsList.FindIndex(x => x.itemName == debugItemList[itemIdRaw]);
+            if (FixesConfig.DebugMenuAlphabetical.Value)
+            {
+                int itemIdRaw = itemId;
+                itemId = StartOfRound.Instance.allItemsList.itemsList.FindIndex(x => x.itemName == debugItemList[itemIdRaw]);
+            }
         }
         // Sort Enemy Dropdown Alphabetically
         internal static FieldInfo enemyTypeId = AccessTools.Field(typeof(QuickMenuManager), "enemyTypeId");
@@ -412,12 +464,17 @@ namespace LethalFixes
         [HarmonyPrefix]
         public static bool Fix_DebugMenu_EnemyOrder_Init(QuickMenuManager __instance)
         {
+            __instance.debugEnemyDropdown.ClearOptions();
+
             if (__instance.testAllEnemiesLevel == null)
             {
                 return false;
             }
+            if (!FixesConfig.DebugMenuAlphabetical.Value)
+            {
+                return true;
+            }
 
-            __instance.debugEnemyDropdown.ClearOptions();
             int enemyTypeIdVal = (int)enemyTypeId.GetValue(__instance);
             switch (enemyTypeIdVal)
             {
@@ -445,7 +502,7 @@ namespace LethalFixes
         [HarmonyPrefix]
         public static void Fix_DebugMenu_EnemyOrder_Spawn(QuickMenuManager __instance, ref int enemyId)
         {
-            if (__instance.testAllEnemiesLevel == null)
+            if (__instance.testAllEnemiesLevel == null || !FixesConfig.DebugMenuAlphabetical.Value)
             {
                 return;
             }
