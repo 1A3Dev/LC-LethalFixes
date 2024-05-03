@@ -57,7 +57,6 @@ namespace LethalFixes
         internal static ConfigEntry<bool> ExactItemScan;
         internal static ConfigEntry<bool> DebugMenuAlphabetical;
         internal static ConfigEntry<bool> ModTerminalScan;
-        internal static ConfigEntry<bool> SpikeTrapSafetyPlayer;
         internal static ConfigEntry<bool> SpikeTrapActivateSound;
         internal static ConfigEntry<bool> SpikeTrapDeactivateSound;
         internal static void InitConfig()
@@ -66,7 +65,6 @@ namespace LethalFixes
             PluginLoader.Instance.BindConfig(ref ExactItemScan, "Settings", "Exact Item Scan", false, "Should the terminal scan command show the exact total value?");
             PluginLoader.Instance.BindConfig(ref DebugMenuAlphabetical, "Settings", "Alphabetical Debug Menu", false, "Should the enemy & item list in the base game debug menu be alphabetical? This does not work properly if you have multiple items with the same name!");
             PluginLoader.Instance.BindConfig(ref ModTerminalScan, "Compatibility", "Terminal Scan Command", true, "Should the terminal scan command be modified by this mod?");
-            PluginLoader.Instance.BindConfig(ref SpikeTrapSafetyPlayer, "Spike Trap", "Player Detection Safety", true, "Should spike traps with player detection have the entrance safe period?");
             PluginLoader.Instance.BindConfig(ref SpikeTrapActivateSound, "Spike Trap", "Sound On Enable", false, "Should spike traps make a sound when re-enabled after being disabled via the terminal?");
             PluginLoader.Instance.BindConfig(ref SpikeTrapDeactivateSound, "Spike Trap", "Sound On Disable", true, "Should spike traps make a sound when disabled via the terminal?");
         }
@@ -184,22 +182,18 @@ namespace LethalFixes
                 trapLight.enabled = enabled;
             }
         }
-        // [Client] Fix to make spike trap safety cooldown also apply to player detection traps
+        // [Client] Fix to make spike trap safety cooldown also apply to player detection traps & fixed the traps killing you if you enter whilst they are mid-slamming
         internal static FieldInfo slamOnIntervals = AccessTools.Field(typeof(SpikeRoofTrap), "slamOnIntervals");
         [HarmonyPatch(typeof(SpikeRoofTrap), "Update")]
         [HarmonyPrefix]
         public static void Fix_SpikeTrapSafety_Update(ref SpikeRoofTrap __instance)
         {
-            if (__instance.trapActive && !__instance.slammingDown && FixesConfig.SpikeTrapSafetyPlayer.Value)
+            if (__instance.trapActive)
             {
-                bool slamOnIntervalsVal = (bool)slamOnIntervals.GetValue(__instance);
-                if (!slamOnIntervalsVal)
+                EntranceTeleport nearEntranceVal = (EntranceTeleport)nearEntrance.GetValue(__instance);
+                if (nearEntranceVal != null && Time.realtimeSinceStartup - nearEntranceVal.timeAtLastUse < 1.2f)
                 {
-                    EntranceTeleport nearEntranceVal = (EntranceTeleport)nearEntrance.GetValue(__instance);
-                    if (nearEntranceVal != null && Time.realtimeSinceStartup - nearEntranceVal.timeAtLastUse < 1.2f)
-                    {
-                        __instance.timeSinceMovingUp = Time.realtimeSinceStartup;
-                    }
+                    __instance.timeSinceMovingUp = Time.realtimeSinceStartup;
                 }
             }
         }

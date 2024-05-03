@@ -12,7 +12,8 @@ This mod fixes a bunch of common Lethal Company issues:
 - [Host] Fixed dead enemies being able to open doors.
 - [Host] Fixed butler knife and metal ordered items not attracting lightning until the next round.
 - [Host] Fixed flooded weather only working for the first day of each session.
-- [Host] Fixed spike trap safety cooldown activating when exiting the facility instead of when entering.
+- [Host] Fixed interval spike trap entrance safety period activating when exiting the facility instead of when entering.
+- [Host] Fixed interval spike trap entrance safety period not preventing death if the trap slams at the exact same time that you enter.
 - [Host] Fixed the hoarder bug not dropping the held item if it's killed too quickly.
 - [Host] Fixed outdoor enemies being able to spawn inside the outdoor objects.
 - [Host] Base Game Debug Menu Changes
@@ -21,9 +22,25 @@ This mod fixes a bunch of common Lethal Company issues:
 - [Client] Fixed the forest giant being able to insta-kill when spawning.
 - [Client] Fixed the start lever cooldown not being reset on the deadline when attempting to route to the company after attempting to go to a regular moon.
 - [Client] Fixed the terminal scan command including items inside the ship in the calculation of the approximate value.
-- [Client] Fixed spike traps having safety cooldown not applying to the player detection variant.
+- [Client] Fixed player detection spike trap having no entrance safety period.
+- [Client] Fixed player detection spike trap entrance safety period not preventing death if the trap slams at the exact same time that you enter.
 - [Client] Fixed spike traps having no indication when disabled via the terminal (they now play the landmine deactivate sound and have the light emissive disabled).
 - [Client] Fixed entrance nearby activity including dead enemies.
+
+### Configuration
+
+The mod has some configuration options including:
+
+- Toggles for the spike trap terminal activate/deactivate sound.
+- Toggle for the terminal scan changes to allow compatibility with other mods.
+
+### Support
+
+You can get support in any the following places:
+
+- The [thread](https://discord.com/channels/1168655651455639582/1235731485894643722) in the [LC Modding Discord Server](https://discord.gg/lcmod)
+- [GitHub Issues](https://github.com/1A3Dev/LC-LethalFixes/issues)
+- [My Discord Server](https://discord.gg/DZD2apDnMM)
 
 ### Compatibility
 
@@ -33,12 +50,4 @@ This mod fixes a bunch of common Lethal Company issues:
   - N/A
 - Not Compatible With:
   - Symbiosis
-    - Disabling the ItemDeathDrop option in the Symbiosis config fixes the compatibility issue.
-
-### Configuration
-
-The mod has a few configuration options!
-
-### Credits
-
-- [1A3](https://github.com/1A3Dev) - _Creator_
+    - This mod does the same thing as the "ItemDeathDrop" config option so I would suggest disabling that option in the Symbiosis config to prevent any issues.
