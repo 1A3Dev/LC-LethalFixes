@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.Emit;
 using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
@@ -11,7 +12,6 @@ using TMPro;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.AI;
-using UnityEngine.UIElements.UIR;
 using Object = UnityEngine.Object;
 
 namespace LethalFixes
@@ -42,13 +42,13 @@ namespace LethalFixes
 
             FixesConfig.InitConfig();
 
-            Assembly patches = Assembly.GetExecutingAssembly();
-            harmony.PatchAll(patches);
-
             // Dissonance Lag Fix
             Dissonance.Logs.SetLogLevel(Dissonance.LogCategory.Recording, Dissonance.LogLevel.Error);
             Dissonance.Logs.SetLogLevel(Dissonance.LogCategory.Playback, Dissonance.LogLevel.Error);
             Dissonance.Logs.SetLogLevel(Dissonance.LogCategory.Network, Dissonance.LogLevel.Error);
+
+            Assembly patches = Assembly.GetExecutingAssembly();
+            harmony.PatchAll(patches);
         }
 
         public void BindConfig<T>(ref ConfigEntry<T> config, string section, string key, T defaultValue, string description = "")
@@ -513,11 +513,53 @@ namespace LethalFixes
             return true;
         }
 
+        // [Client] Fixed Negative Weight Speed Glitch
         [HarmonyPatch(typeof(PlayerControllerB), "Update")]
         [HarmonyPostfix]
         public static void Fix_NegativeCarryWeight(PlayerControllerB __instance)
         {
-            if (__instance.carryWeight < 1) __instance.carryWeight = 1;
+            if (__instance.carryWeight < 1)
+            {
+                __instance.carryWeight = 1;
+                PluginLoader.logSource.LogInfo("Fixing Negative Carry Weight");
+            }
+        }
+
+        // [Host] Notify the player that they were kicked
+        [HarmonyPatch(typeof(StartOfRound), "KickPlayer")]
+        [HarmonyTranspiler]
+        private static IEnumerable<CodeInstruction> KickPlayer_Reason(IEnumerable<CodeInstruction> instructions)
+        {
+            var newInstructions = new List<CodeInstruction>();
+            bool foundClientId = false;
+            bool alreadyReplaced = false;
+            foreach (var instruction in instructions)
+            {
+                if (!alreadyReplaced)
+                {
+                    if (!foundClientId && instruction.opcode == OpCodes.Ldfld && instruction.operand?.ToString() == "System.UInt64 actualClientId")
+                    {
+                        foundClientId = true;
+                        newInstructions.Add(instruction);
+
+                        CodeInstruction kickReason = new CodeInstruction(OpCodes.Ldstr, "You have been kicked.");
+                        newInstructions.Add(kickReason);
+
+                        continue;
+                    }
+                    else if (foundClientId && instruction.opcode == OpCodes.Callvirt && instruction.operand?.ToString() == "Void DisconnectClient(UInt64)")
+                    {
+                        alreadyReplaced = true;
+                        instruction.operand = AccessTools.Method(typeof(NetworkManager), "DisconnectClient", new Type[] { typeof(UInt64), typeof(string) });
+                    }
+                }
+
+                newInstructions.Add(instruction);
+            }
+
+            if (!alreadyReplaced) PluginLoader.logSource.LogWarning("KickPlayer failed to add reason");
+
+            return newInstructions.AsEnumerable();
         }
 
         // Replace button text of toggle test room & invincibility to include the state
