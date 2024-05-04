@@ -1,3 +1,7 @@
+### 1.0.4
+
+- Fixed nearby activity constantly flashing between "Near activity detected" & "Enter: [LMB]" when there is an enemy near the door.
+
 ### 1.0.3
 
 - Changed dissonance log levels.
