@@ -384,6 +384,8 @@ namespace LethalFixes
                 // Block Spawning In Rocks/Pumpkins etc
                 foreach (Transform child in cachedOutsideObjects)
                 {
+                    if (child == null) continue;
+
                     string formattedName = child.name.Replace("(Clone)", "");
                     if (outsideObjectWidths.ContainsKey(formattedName) && Vector3.Distance(spawnPosition, child.position) <= outsideObjectWidths[formattedName])
                     {
