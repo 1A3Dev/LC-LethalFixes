@@ -414,7 +414,7 @@ namespace LethalFixes
 
                 foreach (Transform child in __instance.mapPropsContainer.transform)
                 {
-                    if (outsideObjectWidths.ContainsKey(child.name.Replace("(Clone)", "")))
+                    if (child != null && outsideObjectWidths.ContainsKey(child.name.Replace("(Clone)", "")))
                     {
                         cachedOutsideObjects.Add(child);
                     }
