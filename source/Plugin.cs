@@ -475,7 +475,6 @@ namespace LethalFixes
         internal static FieldInfo entranceExitPoint = AccessTools.Field(typeof(EntranceTeleport), "exitPoint");
         internal static FieldInfo entranceTriggerScript = AccessTools.Field(typeof(EntranceTeleport), "triggerScript");
         internal static FieldInfo checkForEnemiesInterval = AccessTools.Field(typeof(EntranceTeleport), "checkForEnemiesInterval");
-        internal static FieldInfo enemyNearLastCheck = AccessTools.Field(typeof(EntranceTeleport), "enemyNearLastCheck");
         [HarmonyPatch(typeof(EntranceTeleport), "Update")]
         [HarmonyPrefix]
         public static bool Fix_NearActivityDead(EntranceTeleport __instance)
@@ -485,8 +484,17 @@ namespace LethalFixes
             if (__instance.isEntranceToBuilding && triggerScriptVal != null && checkForEnemiesIntervalVal <= 0f)
             {
                 Transform exitPointVal = (Transform)entranceExitPoint.GetValue(__instance);
+                if (!exitPointVal)
+                {
+                    if (__instance.FindExitPoint())
+                    {
+                        exitPointVal = (Transform)entranceExitPoint.GetValue(__instance);
+                    }
+                }
+
                 if (exitPointVal != null)
                 {
+                    checkForEnemiesInterval.SetValue(__instance, 1f);
                     bool flag = false;
                     for (int i = 0; i < RoundManager.Instance.SpawnedEnemies.Count; i++)
                     {
@@ -497,16 +505,11 @@ namespace LethalFixes
                             break;
                         }
                     }
-                    bool enemyNearLastCheckVal = (bool)enemyNearLastCheck.GetValue(__instance);
-                    if (enemyNearLastCheckVal)
+
+                    string newTip = flag ? "[Near activity detected!]" : "Enter: [LMB]";
+                    if (triggerScriptVal.hoverTip != newTip)
                     {
-                        enemyNearLastCheck.SetValue(__instance, false);
-                        triggerScriptVal.hoverTip = "Enter: [LMB]";
-                    }
-                    else if (flag)
-                    {
-                        enemyNearLastCheck.SetValue(__instance, true);
-                        triggerScriptVal.hoverTip = "[Near activity detected!]";
+                        triggerScriptVal.hoverTip = newTip;
                     }
 
                     return false;
