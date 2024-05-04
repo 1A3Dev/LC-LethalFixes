@@ -1,7 +1,9 @@
 ### 1.0.3
 
-- Fixed negative weight speed bug.
 - Changed dissonance log levels.
+- Fixed negative weight speed bug.
+- Fixed clients seeing the default disconnect message when kicked instead of a kick message.
+- Fixed EntranceTeleport error spam when a naturally spawned masked enemy is despawned whilst using ModelReplacementAPI.
 - Added a config option (disabled by default) to enable the spike trap safety period when inverse teleporting.
 
 ### 1.0.2

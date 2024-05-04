@@ -16,6 +16,7 @@ This mod fixes a bunch of common Lethal Company issues:
 - [Host] Fixed interval spike trap entrance safety period not preventing death if the trap slams at the exact same time that you enter.
 - [Host] Fixed the hoarder bug not dropping the held item if it's killed too quickly.
 - [Host] Fixed outdoor enemies being able to spawn inside the outdoor objects.
+- [Host] Fixed clients seeing the default disconnect message when kicked instead of a kick message.
 - [Host] Base Game Debug Menu Changes
   - Made the test room & invincibility toggles show whether they are enabled/disabled.
   - Sorted the enemy & item lists alphabetically.
