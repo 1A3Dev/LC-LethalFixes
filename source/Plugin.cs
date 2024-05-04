@@ -489,7 +489,7 @@ namespace LethalFixes
                     for (int i = 0; i < RoundManager.Instance.SpawnedEnemies.Count; i++)
                     {
                         EnemyAI enemyAI = RoundManager.Instance.SpawnedEnemies[i];
-                        if (!enemyAI.isEnemyDead && !enemyAI.isOutside && Vector3.Distance(enemyAI.transform.position, exitPointVal.transform.position) < FixesConfig.NearActivityDistance.Value)
+                        if (enemyAI != null && !enemyAI.isEnemyDead && !enemyAI.isOutside && Vector3.Distance(enemyAI.transform.position, exitPointVal.transform.position) < FixesConfig.NearActivityDistance.Value)
                         {
                             flag = true;
                             break;

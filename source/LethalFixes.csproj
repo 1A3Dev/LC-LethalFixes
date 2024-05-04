@@ -17,7 +17,6 @@
 
     <ItemGroup>
         <ThunderstoreBuildCopyPath Include="$(TargetPath)" Destination="BepInEx/plugins/$(ProjectName)/" />
-        <ThunderstoreBuildCopyPath Include="$(TargetDir)/$(TargetName).pdb" Condition="$(Configuration) != 'Release'" Destination="BepInEx/plugins/$(ProjectName)/" />
     </ItemGroup>
 
     <ItemGroup>
@@ -45,15 +44,24 @@
         <Reference Include="UnityEngine.UI">
             <HintPath>$(LethalCompanyDir)Lethal Company_Data/Managed/UnityEngine.UI.dll</HintPath>
         </Reference>
+        <Reference Include="DissonanceVoip">
+            <HintPath>$(LethalCompanyDir)Lethal Company_Data/Managed/DissonanceVoip.dll</HintPath>
+        </Reference>
     </ItemGroup>
 
     <ItemGroup Condition="$(CI) == 'true'">
         <PackageReference Include="LethalCompany.GameLibs.Steam" Version="50.0.1-ngd.0" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Reference Include="DissonanceVoip">
-        <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\DissonanceVoip.dll</HintPath>
-      </Reference>
-    </ItemGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+        <DebugType>embedded</DebugType>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+        <DebugType>embedded</DebugType>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <PathMap>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)'))=./</PathMap>
+    </PropertyGroup>
 </Project>
