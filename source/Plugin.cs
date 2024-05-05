@@ -43,9 +43,19 @@ namespace LethalFixes
             FixesConfig.InitConfig();
 
             // Dissonance Lag Fix
-            Dissonance.Logs.SetLogLevel(Dissonance.LogCategory.Recording, Dissonance.LogLevel.Error);
-            Dissonance.Logs.SetLogLevel(Dissonance.LogCategory.Playback, Dissonance.LogLevel.Error);
-            Dissonance.Logs.SetLogLevel(Dissonance.LogCategory.Network, Dissonance.LogLevel.Error);
+            int dissonanceLogLevel = FixesConfig.LogLevelDissonance.Value;
+            if (dissonanceLogLevel < 0 || dissonanceLogLevel > 4)
+            {
+                if (dissonanceLogLevel != -1)
+                {
+                    FixesConfig.LogLevelDissonance.Value = -1;
+                    Config.Save();
+                }
+                dissonanceLogLevel = (int)Dissonance.LogLevel.Error;
+            }
+            Dissonance.Logs.SetLogLevel(Dissonance.LogCategory.Recording, (Dissonance.LogLevel)dissonanceLogLevel);
+            Dissonance.Logs.SetLogLevel(Dissonance.LogCategory.Playback, (Dissonance.LogLevel)dissonanceLogLevel);
+            Dissonance.Logs.SetLogLevel(Dissonance.LogCategory.Network, (Dissonance.LogLevel)dissonanceLogLevel);
 
             Assembly patches = Assembly.GetExecutingAssembly();
             harmony.PatchAll(patches);
@@ -65,21 +75,48 @@ namespace LethalFixes
         internal static ConfigEntry<bool> SpikeTrapActivateSound;
         internal static ConfigEntry<bool> SpikeTrapDeactivateSound;
         internal static ConfigEntry<bool> SpikeTrapSafetyInverse;
+        internal static ConfigEntry<int> LogLevelDissonance;
+        internal static ConfigEntry<int> LogLevelNetworkManager;
         internal static void InitConfig()
         {
-            PluginLoader.Instance.BindConfig(ref NearActivityDistance, "Settings", "Nearby Activity Distance", 7.7f, "How close should an enemy be to an entrance for it to be detected as nearby activity?");
+            AcceptableValueRange<float> AVR_NearActivityDistance = new AcceptableValueRange<float>(0f, 100f);
+            NearActivityDistance = PluginLoader.Instance.Config.Bind("Settings", "Nearby Activity Distance", 7.7f, new ConfigDescription("How close should an enemy be to an entrance for it to be detected as nearby activity?", AVR_NearActivityDistance));
             PluginLoader.Instance.BindConfig(ref ExactItemScan, "Settings", "Exact Item Scan", false, "Should the terminal scan command show the exact total value?");
             PluginLoader.Instance.BindConfig(ref DebugMenuAlphabetical, "Settings", "Alphabetical Debug Menu", false, "Should the enemy & item list in the base game debug menu be alphabetical? This does not work properly if you have multiple items with the same name!");
             PluginLoader.Instance.BindConfig(ref ModTerminalScan, "Compatibility", "Terminal Scan Command", true, "Should the terminal scan command be modified by this mod?");
             PluginLoader.Instance.BindConfig(ref SpikeTrapActivateSound, "Spike Trap", "Sound On Enable", false, "Should spike traps make a sound when re-enabled after being disabled via the terminal?");
             PluginLoader.Instance.BindConfig(ref SpikeTrapDeactivateSound, "Spike Trap", "Sound On Disable", true, "Should spike traps make a sound when disabled via the terminal?");
             PluginLoader.Instance.BindConfig(ref SpikeTrapSafetyInverse, "Spike Trap", "Inverse Teleport Safety", false, "Should spike traps have the safe period if a player inverse teleports underneath?");
+
+            AcceptableValueRange<int> AVR_LogLevelDissonance = new AcceptableValueRange<int>(-1, 4);
+            LogLevelDissonance = PluginLoader.Instance.Config.Bind("Debug", "Log Level (Dissonance)", -1, new ConfigDescription("-1 = Mod Default, 0 = Trace, 1 = Debug, 2 = Info, 3 = Warn, 4 = Error", AVR_LogLevelDissonance));
+            AcceptableValueRange<int> AVR_LogLevelNetworkManager = new AcceptableValueRange<int>(-1, 3);
+            LogLevelNetworkManager = PluginLoader.Instance.Config.Bind("Debug", "Log Level (NetworkManager)", -1, new ConfigDescription("-1 = Mod Default, 0 = Developer, 1 = Normal, 2 = Error, 3 = Nothing", AVR_LogLevelNetworkManager));
         }
     }
 
     [HarmonyPatch]
     internal static class FixesPatch
     {
+        // [Client] RPC Lag Fix
+        [HarmonyPatch(typeof(NetworkManager), "Awake")]
+		[HarmonyPostfix]
+        private static void Fix_RPCLogLevel(NetworkManager __instance)
+        {
+            int networkManagerLogLevel = FixesConfig.LogLevelNetworkManager.Value;
+            if (networkManagerLogLevel < 0 || networkManagerLogLevel > 3)
+            {
+                if (networkManagerLogLevel != -1)
+                {
+                    FixesConfig.LogLevelNetworkManager.Value = -1;
+                    PluginLoader.Instance.Config.Save();
+                }
+                networkManagerLogLevel = (int)Unity.Netcode.LogLevel.Normal;
+            }
+
+            __instance.LogLevel = (Unity.Netcode.LogLevel)networkManagerLogLevel;
+        }
+
         // [Host] Fixed dead enemies being able to open doors
         [HarmonyPatch(typeof(DoorLock), "OnTriggerStay")]
         [HarmonyPrefix]
@@ -409,7 +446,10 @@ namespace LethalFixes
                 SpawnableOutsideObject[] outsideObjectsRaw = __instance.currentLevel.spawnableOutsideObjects.Select(x => x.spawnableObject).ToArray();
                 foreach (SpawnableOutsideObject outsideObject in outsideObjectsRaw)
                 {
-                    outsideObjectWidths.Add(outsideObject.prefabToSpawn.name, outsideObject.objectWidth);
+                    if (outsideObject.prefabToSpawn != null && !outsideObjectWidths.ContainsKey(outsideObject.prefabToSpawn.name))
+                    {
+                        outsideObjectWidths.Add(outsideObject.prefabToSpawn.name, outsideObject.objectWidth);
+                    }
                 }
 
                 foreach (Transform child in __instance.mapPropsContainer.transform)

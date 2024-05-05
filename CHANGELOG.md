@@ -1,3 +1,9 @@
+### 1.0.5
+
+- Fixed exception if the map has a null outside object.
+- Added a config option to choose the Dissonance (Voice Chat) log level.
+- Added a config option to choose the NetworkManager (RPC) log level.
+
 ### 1.0.4
 
 - Fixed nearby activity constantly flashing between "Near activity detected" & "Enter: [LMB]" when there is an enemy near the door.

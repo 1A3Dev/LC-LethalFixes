@@ -27,7 +27,10 @@ This mod fixes a bunch of common Lethal Company issues:
 - [Client] Fixed player detection spike trap entrance safety period not preventing death if the trap slams at the exact same time that you enter.
 - [Client] Fixed spike traps having no indication when disabled via the terminal (they now play the landmine deactivate sound and have the light emissive disabled).
 - [Client] Fixed entrance nearby activity including dead enemies.
-- [Client] Changed all of dissonance log levels to only log errors (to fix log spam when there is voice chat lag).
+- [Client] Changed Dissonance log levels to fix log spam during voice chat lag.
+  - Mod Default: Error (4)
+- [Client] Changed NetworkManager log level to fix log spam from RPCs.
+  - Mod Default: Normal (1)
 - [Client] Added a config option (disabled by default) to enable the spike trap safety period when inverse teleporting.
 
 ### Configuration
