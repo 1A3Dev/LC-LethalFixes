@@ -100,7 +100,7 @@ namespace LethalFixes
     {
         // [Client] RPC Lag Fix
         [HarmonyPatch(typeof(NetworkManager), "Awake")]
-		[HarmonyPostfix]
+        [HarmonyPostfix]
         private static void Fix_RPCLogLevel(NetworkManager __instance)
         {
             int networkManagerLogLevel = FixesConfig.LogLevelNetworkManager.Value;
