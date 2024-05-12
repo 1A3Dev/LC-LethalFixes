@@ -607,6 +607,76 @@ namespace LethalFixes
             return newInstructions.AsEnumerable();
         }
 
+        // [Client] Fix shotgun damage
+        [HarmonyPatch(typeof(ShotgunItem), "ShootGun")]
+        [HarmonyTranspiler]
+        private static IEnumerable<CodeInstruction> Shotgun_ShootGun(IEnumerable<CodeInstruction> instructions)
+        {
+            var newInstructions = new List<CodeInstruction>();
+            bool foundAddLoc = false;
+            bool alreadyReplaced = false;
+            Label retLabel = new Label();
+            foreach (var instruction in instructions)
+            {
+                if (!alreadyReplaced)
+                {
+                    if (!foundAddLoc && instruction.opcode == OpCodes.Callvirt && instruction.operand?.ToString() == "Void Play()")
+                    {
+                        foundAddLoc = true;
+                        newInstructions.Add(instruction);
+
+                        CodeInstruction ldArg0 = new CodeInstruction(OpCodes.Ldarg_0);
+                        newInstructions.Add(ldArg0);
+
+                        CodeInstruction isOwner = new CodeInstruction(OpCodes.Call, AccessTools.PropertyGetter(typeof(ShotgunItem), nameof(ShotgunItem.IsOwner)));
+                        newInstructions.Add(isOwner);
+
+                        CodeInstruction brCode = new CodeInstruction(OpCodes.Brtrue, retLabel);
+                        newInstructions.Add(brCode);
+
+                        CodeInstruction retCode = new CodeInstruction(OpCodes.Ret);
+                        newInstructions.Add(retCode);
+
+                        continue;
+                    }
+                    else if (foundAddLoc)
+                    {
+                        alreadyReplaced = true;
+                        instruction.labels.Add(retLabel);
+                    }
+                }
+
+                newInstructions.Add(instruction);
+            }
+
+            if (!alreadyReplaced) PluginLoader.logSource.LogWarning("ShotgunItem failed to patch ShootGun");
+
+            return newInstructions.AsEnumerable();
+        }
+
+        // Fix the death sound of Baboon Hawk, Hoarder Bug & Nutcracker being set on the wrong field
+        [HarmonyPatch(typeof(EnemyAI), "Start")]
+        [HarmonyPostfix]
+        public static void EnemyAI_Start(EnemyAI __instance)
+        {
+            if (__instance.dieSFX == null && (__instance is BaboonBirdAI || __instance is HoarderBugAI || __instance is NutcrackerEnemyAI))
+            {
+                __instance.dieSFX = __instance.enemyType.deathSFX;
+            }
+        }
+
+        // Fix a nullref on the RadMech missiles if the RadMech is destroyed
+        [HarmonyPatch(typeof(RadMechMissile), "FixedUpdate")]
+        [HarmonyPatch(typeof(RadMechMissile), "CheckCollision")]
+        [HarmonyPrefix]
+        public static void RadMechMissile_Destroy(RadMechMissile __instance)
+        {
+            if (__instance.RadMechScript == null)
+            {
+                Object.Destroy(__instance.gameObject);
+            }
+        }
+
         // Replace button text of toggle test room & invincibility to include the state
         [HarmonyPatch(typeof(QuickMenuManager), "OpenQuickMenu")]
         [HarmonyPostfix]
