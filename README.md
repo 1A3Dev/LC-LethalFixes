@@ -29,7 +29,7 @@ This mod fixes a bunch of common Lethal Company issues:
 - [Client] Fixed entrance nearby activity including dead enemies.
 - [Client] Fixed the shotgun having increased damage for clients.
 - [Client] Fixed the death sound of Baboon Hawks, Hoarder Bugs & Nutcrackers not working.
-- [Client] Fixed the old bird missiles getting stuck if the owning old bird is destroyed by the Earth Leviathan.
+- [Client] Fixed the old bird missiles getting stuck if the owning old bird is destroyed by an earth leviathan.
 - [Client] Changed Dissonance log levels to fix log spam during voice chat lag.
   - Mod Default: Error (4)
 - [Client] Changed NetworkManager log level to fix log spam from RPCs.

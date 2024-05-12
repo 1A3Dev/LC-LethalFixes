@@ -2,7 +2,7 @@
 
 - Fixed the shotgun having increased damage for clients.
 - Fixed the death sound of Baboon Hawks, Hoarder Bugs & Nutcrackers not working.
-- Fixed the old bird missiles getting stuck if the owning old bird is destroyed by the Earth Leviathan.
+- Fixed the old bird missiles getting stuck if the owning old bird is destroyed by an earth leviathan.
 
 ### 1.0.5
 
