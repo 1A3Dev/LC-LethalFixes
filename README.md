@@ -27,6 +27,9 @@ This mod fixes a bunch of common Lethal Company issues:
 - [Client] Fixed player detection spike trap entrance safety period not preventing death if the trap slams at the exact same time that you enter.
 - [Client] Fixed spike traps having no indication when disabled via the terminal (they now play the landmine deactivate sound and have the light emissive disabled).
 - [Client] Fixed entrance nearby activity including dead enemies.
+- [Client] Fixed the shotgun having increased damage for clients.
+- [Client] Fixed the death sound of Baboon Hawks, Hoarder Bugs & Nutcrackers not working.
+- [Client] Fixed the old bird missiles getting stuck if the owning old bird is destroyed by the Earth Leviathan.
 - [Client] Changed Dissonance log levels to fix log spam during voice chat lag.
   - Mod Default: Error (4)
 - [Client] Changed NetworkManager log level to fix log spam from RPCs.
