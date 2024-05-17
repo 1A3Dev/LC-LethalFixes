@@ -566,7 +566,7 @@ namespace LethalFixes
             if (__instance.carryWeight < 1)
             {
                 __instance.carryWeight = 1;
-                PluginLoader.logSource.LogInfo("Fixing Negative Carry Weight");
+                PluginLoader.logSource.LogInfo("[NegativeCarryWeight] Carry Weight Changed To 1");
             }
         }
 
@@ -654,7 +654,7 @@ namespace LethalFixes
             return newInstructions.AsEnumerable();
         }
 
-        // Fix the death sound of Baboon Hawk, Hoarder Bug & Nutcracker being set on the wrong field
+        // [Client] Fix the death sound of Baboon Hawk, Hoarder Bug & Nutcracker being set on the wrong field
         [HarmonyPatch(typeof(EnemyAI), "Start")]
         [HarmonyPostfix]
         public static void EnemyAI_Start(EnemyAI __instance)
@@ -665,7 +665,7 @@ namespace LethalFixes
             }
         }
 
-        // Fix a nullref on the RadMech missiles if the RadMech is destroyed
+        // [Client] Fix a nullref on the RadMech missiles if the RadMech is destroyed
         [HarmonyPatch(typeof(RadMechMissile), "FixedUpdate")]
         [HarmonyPatch(typeof(RadMechMissile), "CheckCollision")]
         [HarmonyPrefix]
@@ -675,6 +675,30 @@ namespace LethalFixes
             {
                 Object.Destroy(__instance.gameObject);
             }
+        }
+
+        // [Host] Fixed enemies being able to be assigned to vents that were already occupied during the same hour
+        [HarmonyPatch(typeof(RoundManager), "AssignRandomEnemyToVent")]
+        [HarmonyPrefix]
+        public static bool AssignRandomEnemyToVent(RoundManager __instance, ref EnemyVent vent)
+        {
+            if (vent.occupied)
+            {
+                List<EnemyVent> list = __instance.allEnemyVents.Where(x => !x.occupied).ToList();
+                if (list.Count > 0)
+                {
+                    EnemyVent origVent = vent;
+                    vent = list[__instance.AnomalyRandom.Next(list.Count)];
+                    PluginLoader.logSource.LogInfo($"[AssignRandomEnemyToVent] Vent {origVent.GetInstanceID()} is already occupied, replacing with un-occupied vent: {vent.GetInstanceID()}!");
+                }
+                else
+                {
+                    PluginLoader.logSource.LogWarning("[AssignRandomEnemyToVent] All vents are occupied!");
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         // Replace button text of toggle test room & invincibility to include the state
