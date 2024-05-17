@@ -1,3 +1,7 @@
+### 1.0.8
+
+- Fixed the old bird being unable to move after successfully grabbing a player.
+
 ### 1.0.7
 
 - Fixed enemies being able to be assigned to vents that were already occupied during the same hour.

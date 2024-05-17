@@ -669,11 +669,25 @@ namespace LethalFixes
         [HarmonyPatch(typeof(RadMechMissile), "FixedUpdate")]
         [HarmonyPatch(typeof(RadMechMissile), "CheckCollision")]
         [HarmonyPrefix]
-        public static void RadMechMissile_Destroy(RadMechMissile __instance)
+        public static void RadMech_MissileDestroy(RadMechMissile __instance)
         {
             if (__instance.RadMechScript == null)
             {
                 Object.Destroy(__instance.gameObject);
+            }
+        }
+
+        // [Host] Fix RadMech being unable to move after grabbing someone
+        private static FieldInfo disableWalking = AccessTools.Field(typeof(RadMechAI), "disableWalking");
+        private static FieldInfo attemptGrabTimer = AccessTools.Field(typeof(RadMechAI), "attemptGrabTimer");
+        [HarmonyPatch(typeof(RadMechAI), "CancelTorchPlayerAnimation")]
+        [HarmonyPostfix]
+        public static void RadMech_CancelTorch(RadMechAI __instance)
+        {
+            if (__instance.IsServer)
+            {
+                disableWalking.SetValue(__instance, false);
+                attemptGrabTimer.SetValue(__instance, 5f);
             }
         }
 
