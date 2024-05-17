@@ -1,3 +1,7 @@
+### 1.0.7
+
+- Fixed enemies being able to be assigned to vents that were already occupied during the same hour.
+
 ### 1.0.6
 
 - Fixed the shotgun having increased damage for clients.

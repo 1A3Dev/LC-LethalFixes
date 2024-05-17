@@ -17,6 +17,8 @@ This mod fixes a bunch of common Lethal Company issues:
 - [Host] Fixed the hoarder bug not dropping the held item if it's killed too quickly.
 - [Host] Fixed outdoor enemies being able to spawn inside the outdoor objects.
 - [Host] Fixed clients seeing the default disconnect message when kicked instead of a kick message.
+- [Host] Fixed enemies being able to be assigned to vents that were already occupied during the same hour.
+  - In vanilla when this bug occurs it results in less enemies spawning since the original enemy that was going to spawn in the vent gets overwritten by the new one.
 - [Host] Base Game Debug Menu Changes
   - Made the test room & invincibility toggles show whether they are enabled/disabled.
   - Sorted the enemy & item lists alphabetically.
