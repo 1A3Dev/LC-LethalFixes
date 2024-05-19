@@ -1,3 +1,8 @@
+### 1.0.9
+
+- Fixed a bug caused by v1.0.6 which resulted in clients being immune to shotgun damage.
+- Added a popup when entering the main menu whilst on the public beta branch to inform people that they are on an outdated version of v50.
+
 ### 1.0.8
 
 - Fixed the old bird being unable to move after successfully grabbing a player.
