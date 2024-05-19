@@ -613,36 +613,25 @@ namespace LethalFixes
         private static IEnumerable<CodeInstruction> Shotgun_ShootGun(IEnumerable<CodeInstruction> instructions)
         {
             var newInstructions = new List<CodeInstruction>();
-            bool foundAddLoc = false;
             bool alreadyReplaced = false;
-            Label retLabel = new Label();
             foreach (var instruction in instructions)
             {
                 if (!alreadyReplaced)
                 {
-                    if (!foundAddLoc && instruction.opcode == OpCodes.Callvirt && instruction.operand?.ToString() == "Void Play()")
-                    {
-                        foundAddLoc = true;
-                        newInstructions.Add(instruction);
-
-                        CodeInstruction ldArg0 = new CodeInstruction(OpCodes.Ldarg_0);
-                        newInstructions.Add(ldArg0);
-
-                        CodeInstruction isOwner = new CodeInstruction(OpCodes.Call, AccessTools.PropertyGetter(typeof(ShotgunItem), nameof(ShotgunItem.IsOwner)));
-                        newInstructions.Add(isOwner);
-
-                        CodeInstruction brCode = new CodeInstruction(OpCodes.Brtrue, retLabel);
-                        newInstructions.Add(brCode);
-
-                        CodeInstruction retCode = new CodeInstruction(OpCodes.Ret);
-                        newInstructions.Add(retCode);
-
-                        continue;
-                    }
-                    else if (foundAddLoc)
+                    if (instruction.opcode == OpCodes.Ldfld && instruction.operand?.ToString() == "UnityEngine.RaycastHit[] enemyColliders")
                     {
                         alreadyReplaced = true;
-                        instruction.labels.Add(retLabel);
+
+                        Label retLabel = new Label();
+                        CodeInstruction custIns1 = new CodeInstruction(OpCodes.Call, AccessTools.PropertyGetter(typeof(ShotgunItem), nameof(ShotgunItem.IsOwner)));
+                        newInstructions.Add(custIns1);
+                        CodeInstruction custIns2 = new CodeInstruction(OpCodes.Brtrue, retLabel);
+                        newInstructions.Add(custIns2);
+                        CodeInstruction custIns3 = new CodeInstruction(OpCodes.Ret);
+                        newInstructions.Add(custIns3);
+                        CodeInstruction custIns4 = new CodeInstruction(OpCodes.Ldarg_0);
+                        custIns4.labels.Add(retLabel);
+                        newInstructions.Add(custIns4);
                     }
                 }
 
@@ -713,6 +702,22 @@ namespace LethalFixes
             }
 
             return true;
+        }
+
+        // Show outdated warning for people still on the public beta
+        [HarmonyPatch(typeof(MenuManager), "Awake")]
+        [HarmonyPostfix]
+        public static void MenuManager_Awake(MenuManager __instance)
+        {
+            try
+            {
+                if (Steamworks.SteamApps.CurrentBetaName == "public_beta" && Steamworks.SteamApps.BuildId == 14043096)
+                {
+                    __instance.menuNotificationText.SetText("You are on an outdated version of v50. Please ensure beta participation is disabled in the preferences when right clicking the game on Steam!", true);
+                    __instance.menuNotificationButtonText.SetText("[ CLOSE ]", true);
+                    __instance.menuNotification.SetActive(true);
+                }
+            } catch { }
         }
 
         // Replace button text of toggle test room & invincibility to include the state

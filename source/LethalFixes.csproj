@@ -47,6 +47,9 @@
         <Reference Include="DissonanceVoip">
             <HintPath>$(LethalCompanyDir)Lethal Company_Data/Managed/DissonanceVoip.dll</HintPath>
         </Reference>
+        <Reference Include="Facepunch.Steamworks.Win64">
+          <HintPath>$(LethalCompanyDir)Lethal Company_Data/Managed/Facepunch.Steamworks.Win64.dll</HintPath>
+        </Reference>
     </ItemGroup>
 
     <ItemGroup Condition="$(CI) == 'true'">
