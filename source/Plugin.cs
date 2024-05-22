@@ -6,6 +6,8 @@ using System.Reflection.Emit;
 using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
+using Dissonance;
+using DunGen;
 using GameNetcodeStuff;
 using HarmonyLib;
 using TMPro;
@@ -133,12 +135,13 @@ namespace LethalFixes
             return true;
         }
 
-        // [Host] Fixed metal items spawned mid-round not attracting lightning until the next round
+        public static List<string> removeLightShadows = new List<string>() { "FancyLamp", "LungApparatus" };
         private static FieldInfo metalObjects = AccessTools.Field(typeof(StormyWeather), "metalObjects");
         [HarmonyPatch(typeof(GrabbableObject), "Start")]
         [HarmonyPostfix]
-        public static void Fix_ItemLightning_New(ref GrabbableObject __instance)
+        public static void Fix_ItemSpawn(ref GrabbableObject __instance)
         {
+            // [Host] Fixed metal items spawned mid-round not attracting lightning until the next round
             if (__instance.itemProperties.isConductiveMetal)
             {
                 StormyWeather stormyWeather = Object.FindFirstObjectByType<StormyWeather>();
@@ -153,6 +156,16 @@ namespace LethalFixes
                             metalObjects.SetValue(stormyWeather, metalObjectsVal);
                         }
                     }
+                }
+            }
+
+            // [Client] Fixed version of NoPropShadows
+            if (removeLightShadows.Contains(__instance.itemProperties.name))
+            {
+                Light light = __instance.GetComponentInChildren<Light>();
+                if (light != null)
+                {
+                    light.shadows = 0;
                 }
             }
         }
@@ -704,7 +717,7 @@ namespace LethalFixes
             return true;
         }
 
-        // Show outdated warning for people still on the public beta
+        // [Client] Show outdated warning for people still on the public beta
         [HarmonyPatch(typeof(MenuManager), "Awake")]
         [HarmonyPostfix]
         public static void MenuManager_Awake(MenuManager __instance)
@@ -719,6 +732,79 @@ namespace LethalFixes
                 }
             } catch { }
         }
+
+        // [Host] Rank Fix
+        [HarmonyPatch(typeof(HUDManager), "SetSavedValues")]
+        [HarmonyPostfix]
+        private static void HUDSetSavedValues(HUDManager __instance)
+        {
+            if (__instance.IsHost)
+            {
+                GameNetworkManager.Instance.localPlayerController.playerLevelNumber = __instance.localPlayerLevel;
+            }
+        }
+
+        // [Client] Speaking indicator for voice activity
+        [HarmonyPatch(typeof(StartOfRound), "DetectVoiceChatAmplitude")]
+        [HarmonyPrefix]
+        [HarmonyWrapSafe]
+        public static void SpeakingIndicator_VAC(StartOfRound __instance)
+        {
+            if (__instance.voiceChatModule != null)
+            {
+                VoicePlayerState voicePlayerState = __instance.voiceChatModule.FindPlayer(__instance.voiceChatModule.LocalPlayerName);
+                HUDManager.Instance.PTTIcon.enabled = voicePlayerState.IsSpeaking && IngamePlayerSettings.Instance.settings.micEnabled && !__instance.voiceChatModule.IsMuted;
+            }
+        }
+
+        //// Door Collision Fix
+        //[HarmonyPatch(typeof(DungeonUtil), "AddAndSetupDoorComponent")]
+        //[HarmonyPostfix]
+        //public static void Door_CollisionFix(Dungeon dungeon, GameObject doorPrefab, Doorway doorway)
+        //{
+        //    if (
+        //        !doorPrefab.name.StartsWith("SteelDoorMapSpawn") &&
+        //        !doorPrefab.name.StartsWith("FancyDoorMapSpawn")
+        //    )
+        //    {
+        //        return;
+        //    }
+
+        //    SpawnSyncedObject spawner = doorPrefab.GetComponent<SpawnSyncedObject>();
+        //    foreach (Transform door_child in spawner.spawnPrefab.transform)
+        //    {
+        //        if (!door_child.name.StartsWith("SteelDoor") && !door_child.name.StartsWith("FancyDoor"))
+        //        {
+        //            continue;
+        //        }
+
+        //        foreach (Transform doormesh_child in door_child.transform)
+        //        {
+        //            if (!doormesh_child.name.StartsWith("DoorMesh"))
+        //            {
+        //                continue;
+        //            }
+
+        //            foreach (Transform cube_child in doormesh_child.transform)
+        //            {
+        //                if (cube_child.tag != "InteractTrigger")
+        //                {
+        //                    continue;
+        //                }
+
+        //                BoxCollider[] colliders = cube_child.gameObject.GetComponents<BoxCollider>();
+        //                foreach (BoxCollider collider in colliders)
+        //                {
+        //                    if (!collider.isTrigger)
+        //                    {
+        //                        continue;
+        //                    }
+        //                    //collider.size = new Vector3(0.64F, 1F, 1F);
+        //                }
+        //            }
+        //        }
+        //    }
+        //}
 
         // Replace button text of toggle test room & invincibility to include the state
         [HarmonyPatch(typeof(QuickMenuManager), "OpenQuickMenu")]

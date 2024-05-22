@@ -12,12 +12,20 @@ This mod fixes a bunch of common Lethal Company issues:
 - General Fixes
   - [Host] Fixed flooded weather only working for the first day of each session.
   - [Host] Fixed clients seeing the default disconnect message when kicked instead of a kick message.
+  - [Host] Fixed the host's rank not syncing to clients on initial join.
+    - The same as [RankFix](https://thunderstore.io/c/lethal-company/p/Glitch/RankFix/).
   - [Client] Fixed the start lever cooldown not being reset on the deadline when attempting to route to the company after attempting to go to a regular moon.
   - [Client] Fixed the terminal scan command including items inside the ship in the calculation of the approximate value.
   - [Client] Fixed the shotgun having increased damage for clients.
+  - [Client] Removed shadows from the fancy lamp & apparatus to improve performance.
+    - The same as [NoPropShadows](https://thunderstore.io/c/lethal-company/p/Glitch/NoPropShadows/) but without the requirement of having to re-join the lobby for the shadows to be removed from newly spawned props.
+  - [Client] Made PTT speaking indicator only visible when speaking.
+  - [Client] Made PTT speaking indicator show for voice activity too.
   - [Client] Changed Dissonance log levels to fix log spam during voice chat lag.
+    - The same as [DissonanceLagFix](https://thunderstore.io/c/lethal-company/p/linkoid/DissonanceLagFix/) but with the ability to change the log level in the config and with all of the log levels changed instead of only the recording one.
     - Mod Default: Error (4)
   - [Client] Changed NetworkManager log level to fix log spam from RPCs.
+    - The same as [FixRPCLag](https://thunderstore.io/c/lethal-company/p/Bobbie/FixRPCLag/) but with the ability to change the log level in the config.
     - Mod Default: Normal (1)
 - Enemy Fixes
   - [Host] Fixed dead enemies being able to open doors.
@@ -26,11 +34,13 @@ This mod fixes a bunch of common Lethal Company issues:
     - In vanilla when this bug occurs it results in less enemies spawning since the original enemy that was going to spawn in the vent gets overwritten by the new one.
   - [Host] Fixed butler knife and metal ordered items not attracting lightning until the next round.
   - [Host] Fixed the hoarder bug not dropping the held item if it's killed too quickly.
-  - [Client] Fixed entrance nearby activity including dead enemies.
-  - [Client] Fixed the forest giant being able to insta-kill when spawning.
-  - [Client] Fixed the death sound of Baboon Hawks, Hoarder Bugs & Nutcrackers not working.
-  - [Client] Fixed the old bird missiles getting stuck if the owning old bird is destroyed by an earth leviathan.
   - [Host] Fixed the old bird being unable to move after successfully grabbing a player.
+  - [Client] Fixed entrance nearby activity including dead enemies.
+  - [Client] Fixed forest giants being able to kill before their spawn animation finishes.
+    - Similar to [LCSpawnOnPlayerFix](https://thunderstore.io/c/lethal-company/p/Suki/LCSpawnOnPlayerFix/) but instead of disabling nearby spawn points this fixes the actual cause of the issue.
+  - [Client] Fixed the death sound of Baboon Hawks, Hoarder Bugs & Nutcrackers not working.
+    - For additional sound fixes I would suggest using [EnemySoundFixes](https://thunderstore.io/c/lethal-company/p/ButteryStancakes/EnemySoundFixes/).
+  - [Client] Fixed the old bird missiles getting stuck if the owning old bird is destroyed by an earth leviathan.
 - Spike Trap Fixes
   - [Host] Fixed interval spike trap entrance safety period activating when exiting the facility instead of when entering.
   - [Host] Fixed interval spike trap entrance safety period not preventing death if the trap slams at the exact same time that you enter.

@@ -1,3 +1,12 @@
+### 1.1.0
+
+- [Host] Fixed the host's rank not syncing to clients on initial join.
+  - The same as [RankFix](https://thunderstore.io/c/lethal-company/p/Glitch/RankFix/).
+- [Client] Removed shadows from the fancy lamp & apparatus to improve performance.
+  - The same as [NoPropShadows](https://thunderstore.io/c/lethal-company/p/Glitch/NoPropShadows/) but without the requirement of having to re-join the lobby for the shadows to be removed from newly spawned props.
+- [Client] Made PTT speaking indicator only visible when speaking.
+- [Client] Made PTT speaking indicator show for voice activity too.
+
 ### 1.0.9
 
 - Fixed a bug caused by v1.0.6 which resulted in clients being immune to shotgun damage.
