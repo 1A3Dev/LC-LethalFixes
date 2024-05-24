@@ -6,7 +6,6 @@ using System.Reflection.Emit;
 using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
-using Dissonance;
 using DunGen;
 using GameNetcodeStuff;
 using HarmonyLib;
@@ -72,7 +71,7 @@ namespace LethalFixes
     {
         internal static ConfigEntry<float> NearActivityDistance;
         internal static ConfigEntry<bool> ExactItemScan;
-        internal static ConfigEntry<bool> DebugMenuAlphabetical;
+        internal static ConfigEntry<bool> VACSpeakingIndicator;
         internal static ConfigEntry<bool> ModTerminalScan;
         internal static ConfigEntry<bool> SpikeTrapActivateSound;
         internal static ConfigEntry<bool> SpikeTrapDeactivateSound;
@@ -84,7 +83,7 @@ namespace LethalFixes
             AcceptableValueRange<float> AVR_NearActivityDistance = new AcceptableValueRange<float>(0f, 100f);
             NearActivityDistance = PluginLoader.Instance.Config.Bind("Settings", "Nearby Activity Distance", 7.7f, new ConfigDescription("How close should an enemy be to an entrance for it to be detected as nearby activity?", AVR_NearActivityDistance));
             PluginLoader.Instance.BindConfig(ref ExactItemScan, "Settings", "Exact Item Scan", false, "Should the terminal scan command show the exact total value?");
-            PluginLoader.Instance.BindConfig(ref DebugMenuAlphabetical, "Settings", "Alphabetical Debug Menu", false, "Should the enemy & item list in the base game debug menu be alphabetical? This does not work properly if you have multiple items with the same name!");
+            PluginLoader.Instance.BindConfig(ref VACSpeakingIndicator, "Settings", "Voice Activity Icon", true, "Should the PTT speaking indicator be visible whilst using voice activation?");
             PluginLoader.Instance.BindConfig(ref ModTerminalScan, "Compatibility", "Terminal Scan Command", true, "Should the terminal scan command be modified by this mod?");
             PluginLoader.Instance.BindConfig(ref SpikeTrapActivateSound, "Spike Trap", "Sound On Enable", false, "Should spike traps make a sound when re-enabled after being disabled via the terminal?");
             PluginLoader.Instance.BindConfig(ref SpikeTrapDeactivateSound, "Spike Trap", "Sound On Disable", true, "Should spike traps make a sound when disabled via the terminal?");
@@ -752,59 +751,21 @@ namespace LethalFixes
         {
             if (__instance.voiceChatModule != null)
             {
-                VoicePlayerState voicePlayerState = __instance.voiceChatModule.FindPlayer(__instance.voiceChatModule.LocalPlayerName);
-                HUDManager.Instance.PTTIcon.enabled = voicePlayerState.IsSpeaking && IngamePlayerSettings.Instance.settings.micEnabled && !__instance.voiceChatModule.IsMuted;
+                Dissonance.VoicePlayerState voicePlayerState = __instance.voiceChatModule.FindPlayer(__instance.voiceChatModule.LocalPlayerName);
+                HUDManager.Instance.PTTIcon.enabled = voicePlayerState.IsSpeaking && IngamePlayerSettings.Instance.settings.micEnabled && !__instance.voiceChatModule.IsMuted && (IngamePlayerSettings.Instance.settings.pushToTalk || FixesConfig.VACSpeakingIndicator.Value);
             }
         }
 
-        //// Door Collision Fix
-        //[HarmonyPatch(typeof(DungeonUtil), "AddAndSetupDoorComponent")]
-        //[HarmonyPostfix]
-        //public static void Door_CollisionFix(Dungeon dungeon, GameObject doorPrefab, Doorway doorway)
-        //{
-        //    if (
-        //        !doorPrefab.name.StartsWith("SteelDoorMapSpawn") &&
-        //        !doorPrefab.name.StartsWith("FancyDoorMapSpawn")
-        //    )
-        //    {
-        //        return;
-        //    }
-
-        //    SpawnSyncedObject spawner = doorPrefab.GetComponent<SpawnSyncedObject>();
-        //    foreach (Transform door_child in spawner.spawnPrefab.transform)
-        //    {
-        //        if (!door_child.name.StartsWith("SteelDoor") && !door_child.name.StartsWith("FancyDoor"))
-        //        {
-        //            continue;
-        //        }
-
-        //        foreach (Transform doormesh_child in door_child.transform)
-        //        {
-        //            if (!doormesh_child.name.StartsWith("DoorMesh"))
-        //            {
-        //                continue;
-        //            }
-
-        //            foreach (Transform cube_child in doormesh_child.transform)
-        //            {
-        //                if (cube_child.tag != "InteractTrigger")
-        //                {
-        //                    continue;
-        //                }
-
-        //                BoxCollider[] colliders = cube_child.gameObject.GetComponents<BoxCollider>();
-        //                foreach (BoxCollider collider in colliders)
-        //                {
-        //                    if (!collider.isTrigger)
-        //                    {
-        //                        continue;
-        //                    }
-        //                    //collider.size = new Vector3(0.64F, 1F, 1F);
-        //                }
-        //            }
-        //        }
-        //    }
-        //}
+        // [Client] Fix LAN Above Head Usernames
+        [HarmonyPatch(typeof(NetworkSceneManager), "PopulateScenePlacedObjects")]
+        [HarmonyPostfix]
+        public static void Fix_LANUsernameBillboard()
+        {
+            foreach (PlayerControllerB newPlayerScript in StartOfRound.Instance.allPlayerScripts) // Fix for billboards showing as Player # with no number in LAN (base game issue)
+            {
+                newPlayerScript.usernameBillboardText.text = newPlayerScript.playerUsername;
+            }
+        }
 
         // Replace button text of toggle test room & invincibility to include the state
         [HarmonyPatch(typeof(QuickMenuManager), "OpenQuickMenu")]
@@ -829,103 +790,6 @@ namespace LethalFixes
         {
             QuickMenuManager quickMenuManager = Object.FindFirstObjectByType<QuickMenuManager>();
             quickMenuManager.debugMenuUI.transform.Find("Image/ToggleInvincibility/Text (TMP)").GetComponent<TextMeshProUGUI>().text = !allowDeath ? "God Mode: Enabled" : "God Mode: Disabled";
-        }
-        // Sort Item Dropdown Alphabetically
-        internal static List<string> debugItemList = new List<string>();
-        [HarmonyPatch(typeof(QuickMenuManager), "Debug_SetAllItemsDropdownOptions")]
-        [HarmonyPrefix]
-        public static bool Fix_DebugMenu_ItemOrder_Init(QuickMenuManager __instance)
-        {
-            if (!FixesConfig.DebugMenuAlphabetical.Value)
-            {
-                return true;
-            }
-
-            __instance.allItemsDropdown.ClearOptions();
-            debugItemList = StartOfRound.Instance.allItemsList.itemsList.Select(x => x.itemName).OrderBy(x => x).ToList();
-            __instance.allItemsDropdown.AddOptions(debugItemList);
-            return false;
-        }
-        [HarmonyPatch(typeof(QuickMenuManager), "Debug_SetItemToSpawn")]
-        [HarmonyPrefix]
-        public static void Fix_DebugMenu_ItemOrder_Spawn(ref int itemId)
-        {
-            if (FixesConfig.DebugMenuAlphabetical.Value)
-            {
-                int itemIdRaw = itemId;
-                itemId = StartOfRound.Instance.allItemsList.itemsList.FindIndex(x => x.itemName == debugItemList[itemIdRaw]);
-            }
-        }
-        // Sort Enemy Dropdown Alphabetically
-        internal static FieldInfo enemyTypeId = AccessTools.Field(typeof(QuickMenuManager), "enemyTypeId");
-        internal static List<string> debugEnemyList = new List<string>();
-        [HarmonyPatch(typeof(QuickMenuManager), "Debug_SetEnemyDropdownOptions")]
-        [HarmonyPrefix]
-        public static bool Fix_DebugMenu_EnemyOrder_Init(QuickMenuManager __instance)
-        {
-            __instance.debugEnemyDropdown.ClearOptions();
-
-            if (__instance.testAllEnemiesLevel == null)
-            {
-                return false;
-            }
-            if (!FixesConfig.DebugMenuAlphabetical.Value)
-            {
-                return true;
-            }
-
-            int enemyTypeIdVal = (int)enemyTypeId.GetValue(__instance);
-            switch (enemyTypeIdVal)
-            {
-                case 0:
-                    {
-                        debugEnemyList = __instance.testAllEnemiesLevel.Enemies.Select(x => x.enemyType.enemyName).OrderBy(x => x).ToList();
-                        break;
-                    }
-                case 1:
-                    {
-                        debugEnemyList = __instance.testAllEnemiesLevel.OutsideEnemies.Select(x => x.enemyType.enemyName).OrderBy(x => x).ToList();
-                        break;
-                    }
-                case 2:
-                    {
-                        debugEnemyList = __instance.testAllEnemiesLevel.DaytimeEnemies.Select(x => x.enemyType.enemyName).OrderBy(x => x).ToList();
-                        break;
-                    }
-            }
-            __instance.debugEnemyDropdown.AddOptions(debugEnemyList);
-            __instance.Debug_SetEnemyToSpawn(0);
-            return false;
-        }
-        [HarmonyPatch(typeof(QuickMenuManager), "Debug_SetEnemyToSpawn")]
-        [HarmonyPrefix]
-        public static void Fix_DebugMenu_EnemyOrder_Spawn(QuickMenuManager __instance, ref int enemyId)
-        {
-            if (__instance.testAllEnemiesLevel == null || !FixesConfig.DebugMenuAlphabetical.Value)
-            {
-                return;
-            }
-
-            int enemyIdRaw = enemyId;
-            int enemyTypeIdVal = (int)enemyTypeId.GetValue(__instance);
-            switch (enemyTypeIdVal)
-            {
-                case 0:
-                    {
-                        enemyId = __instance.testAllEnemiesLevel.Enemies.FindIndex(x => x.enemyType.enemyName == debugEnemyList[enemyIdRaw]);
-                        break;
-                    }
-                case 1:
-                    {
-                        enemyId = __instance.testAllEnemiesLevel.OutsideEnemies.FindIndex(x => x.enemyType.enemyName == debugEnemyList[enemyIdRaw]);
-                        break;
-                    }
-                case 2:
-                    {
-                        enemyId = __instance.testAllEnemiesLevel.DaytimeEnemies.FindIndex(x => x.enemyType.enemyName == debugEnemyList[enemyIdRaw]);
-                        break;
-                    }
-            }
         }
     }
 }

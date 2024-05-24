@@ -1,3 +1,8 @@
+### 1.1.1
+
+- Added a config option to decide whether the PTT speaking indicator shows for voice activity.
+- Fixed the name above your head in LAN not including the player id.
+
 ### 1.1.0
 
 - [Host] Fixed the host's rank not syncing to clients on initial join.

@@ -10,6 +10,7 @@
 This mod fixes a bunch of common Lethal Company issues:
 
 - General Fixes
+  - [Host] Made the debug menu test room & invincibility toggles show whether they are enabled/disabled.
   - [Host] Fixed flooded weather only working for the first day of each session.
   - [Host] Fixed clients seeing the default disconnect message when kicked instead of a kick message.
   - [Host] Fixed the host's rank not syncing to clients on initial join.
@@ -21,6 +22,7 @@ This mod fixes a bunch of common Lethal Company issues:
     - The same as [NoPropShadows](https://thunderstore.io/c/lethal-company/p/Glitch/NoPropShadows/) but without the requirement of having to re-join the lobby for the shadows to be removed from newly spawned props.
   - [Client] Made PTT speaking indicator only visible when speaking.
   - [Client] Made PTT speaking indicator show for voice activity too.
+  - [Client] Fixed the name above your head in LAN not including the player id (currently it just shows Player #).
   - [Client] Changed Dissonance log levels to fix log spam during voice chat lag.
     - The same as [DissonanceLagFix](https://thunderstore.io/c/lethal-company/p/linkoid/DissonanceLagFix/) but with the ability to change the log level in the config and with all of the log levels changed instead of only the recording one.
     - Mod Default: Error (4)
@@ -48,9 +50,6 @@ This mod fixes a bunch of common Lethal Company issues:
   - [Client] Fixed player detection spike trap entrance safety period not preventing death if the trap slams at the exact same time that you enter.
   - [Client] Fixed spike traps having no indication when disabled via the terminal (they now play the landmine deactivate sound and have the light emissive disabled).
   - [Client] Added the ability to enable the spike trap safety period when inverse teleporting (disabled by default).
-- Debug Menu Changes
-  - [Host] Made the test room & invincibility toggles show whether they are enabled/disabled.
-  - [Host] Sorted the enemy & item lists alphabetically.
 
 ### Configuration
 
@@ -59,6 +58,7 @@ The mod has some configuration options including:
 - Toggle for the terminal scan changes to allow compatibility with other mods.
 - Toggle for the spike trap terminal activate/deactivate sounds.
 - Toggle for the spike trap safety period when inverse teleporting.
+- Toggle to decide whether the PTT speaking indicator shows for voice activity.
 
 ### Support
 
