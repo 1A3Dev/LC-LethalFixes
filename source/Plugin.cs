@@ -692,6 +692,30 @@ namespace LethalFixes
             }
         }
 
+        // [Client] Fix RadMech teleporting to flight destinations on client for every flight after the first
+        // [Client] Fix RadMech desyncing on clients (invisible robot bug)
+        private static FieldInfo finishingFlight = AccessTools.Field(typeof(RadMechAI), "finishingFlight");
+        private static FieldInfo inFlyingMode = AccessTools.Field(typeof(RadMechAI), "inFlyingMode");
+        [HarmonyPatch(typeof(RadMechAI), "Update")]
+        [HarmonyPrefix]
+        public static void RadMech_SetFinishingFlight(RadMechAI __instance)
+        {
+            if (__instance.currentBehaviourStateIndex != 2) //if we're not in the flying state
+            {
+                finishingFlight.SetValue(__instance, false); //set finishingFlight back to false to fix teleporting on the next flight
+
+                if ((bool)inFlyingMode.GetValue(__instance)) //isFlying is true but we're not in the flying state, desync bug happened
+                {
+                    inFlyingMode.SetValue(__instance, false);
+                    __instance.inSpecialAnimation = false;
+                    Debug.Log("Fixed invisible robot bug occurrence!");
+                }
+            }
+
+
+
+        }
+
         // [Host] Fixed enemies being able to be assigned to vents that were already occupied during the same hour
         [HarmonyPatch(typeof(RoundManager), "AssignRandomEnemyToVent")]
         [HarmonyPrefix]
