@@ -711,9 +711,23 @@ namespace LethalFixes
                     Debug.Log("Fixed invisible robot bug occurrence!");
                 }
             }
+        }
 
+        // [Client] Fix Nutcracker not moving while aiming
+        [HarmonyPatch(typeof(NutcrackerEnemyAI), "AimGunClientRpc")]
+        [HarmonyPostfix]
+        static void Nutcracker_FixClientMovement(NutcrackerEnemyAI __instance)
+        {
+            __instance.transform.position = __instance.serverPosition;
+            __instance.inSpecialAnimation = false; //this bool disables the nutcracker position sync when true, stopping clients from seeing the aim-walk
+        }
 
-
+        [HarmonyPatch(typeof(NutcrackerEnemyAI), "Start")]
+        [HarmonyPostfix]
+        public static void Nutcracker_Start(NutcrackerEnemyAI __instance)
+        {
+            // Improve sync accuracy of nutcrackers hostside, will make their aim-walk less jerky in conjunction with the above fix
+            __instance.updatePositionThreshold = 0.5f;
         }
 
         // [Host] Fixed enemies being able to be assigned to vents that were already occupied during the same hour
