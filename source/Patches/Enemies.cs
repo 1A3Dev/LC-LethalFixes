@@ -283,14 +283,14 @@ namespace LethalFixes.Patches
                 if ((bool)finishingFlight.GetValue(__instance))
                 {
                     finishingFlight.SetValue(__instance, false);
-                    PluginLoader.logSource.LogInfo("[RadMech] Set finishingFlight to false");
+                    //PluginLoader.logSource.LogInfo("[RadMech] Set finishingFlight to false");
                 }
                 // inFlyingMode is true but we're not in the flying state - desync bug happened
                 if ((bool)inFlyingMode.GetValue(__instance))
                 {
                     inFlyingMode.SetValue(__instance, false);
                     __instance.inSpecialAnimation = false;
-                    PluginLoader.logSource.LogInfo("[RadMech] Set inFlyingMode to false");
+                    //PluginLoader.logSource.LogInfo("[RadMech] Set inFlyingMode to false");
                 }
             }
         }
@@ -300,8 +300,13 @@ namespace LethalFixes.Patches
         [HarmonyPostfix]
         static void Nutcracker_FixClientMovement(NutcrackerEnemyAI __instance)
         {
-            __instance.transform.position = __instance.serverPosition;
+            if (!__instance.IsOwner)
+            {
+                __instance.transform.position = __instance.serverPosition;
+                __instance.transform.eulerAngles = __instance.serverRotation;
+            }
             __instance.inSpecialAnimation = false; //this bool disables the nutcracker position sync when true, stopping clients from seeing the aim-walk
+            //PluginLoader.logSource.LogInfo("[Nutcracker] Set inSpecialAnimation to false");
         }
 
         [HarmonyPatch(typeof(NutcrackerEnemyAI), "Start")]
@@ -309,6 +314,7 @@ namespace LethalFixes.Patches
         public static void Nutcracker_Start(NutcrackerEnemyAI __instance)
         {
             // Improve sync accuracy of nutcrackers hostside, will make their aim-walk less jerky in conjunction with the above fix
+            //PluginLoader.logSource.LogInfo($"[Nutcracker] Changing updatePositionThreshold from {__instance.updatePositionThreshold} to 0.5");
             __instance.updatePositionThreshold = 0.5f;
         }
     }

@@ -94,7 +94,7 @@ namespace LethalFixes
     }
 
     [HarmonyPatch]
-    internal static class FixesPatch
+    internal static class Patches_General
     {
         // [Client] RPC Lag Fix
         [HarmonyPatch(typeof(NetworkManager), "Awake")]
