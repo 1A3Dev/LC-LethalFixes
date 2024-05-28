@@ -10,6 +10,7 @@
 This mod fixes a bunch of common Lethal Company issues:
 
 - General Fixes
+
   - [Host] Made the debug menu test room & invincibility toggles show whether they are enabled/disabled.
   - [Host] Fixed flooded weather only working for the first day of each session.
   - [Host] Fixed clients seeing the default disconnect message when kicked instead of a kick message.
@@ -23,13 +24,17 @@ This mod fixes a bunch of common Lethal Company issues:
   - [Client] Made PTT speaking indicator only visible when speaking.
   - [Client] Made PTT speaking indicator show for voice activity too.
   - [Client] Fixed the name above your head in LAN not including the player id (currently it just shows Player #).
+  - [Client] Fixed the main menu buttons not being aligned properly.
+    - The same as [Align Menu Buttons](https://thunderstore.io/c/lethal-company/p/GoldenGuy1000/Align_Menu_Buttons/).
   - [Client] Changed Dissonance log levels to fix log spam during voice chat lag.
     - The same as [DissonanceLagFix](https://thunderstore.io/c/lethal-company/p/linkoid/DissonanceLagFix/) but with the ability to change the log level in the config and with all of the log levels changed instead of only the recording one.
     - Mod Default: Error (4)
   - [Client] Changed NetworkManager log level to fix log spam from RPCs.
     - The same as [FixRPCLag](https://thunderstore.io/c/lethal-company/p/Bobbie/FixRPCLag/) but with the ability to change the log level in the config.
     - Mod Default: Normal (1)
+
 - Enemy Fixes
+
   - [Host] Fixed dead enemies being able to open doors.
   - [Host] Fixed outdoor enemies being able to spawn inside the outdoor objects.
   - [Host] Fixed indoor enemies being able to be assigned to vents that were already occupied during the same hour.
@@ -43,6 +48,9 @@ This mod fixes a bunch of common Lethal Company issues:
   - [Client] Fixed the death sound of Baboon Hawks, Hoarder Bugs & Nutcrackers not working.
     - For additional sound fixes I would suggest using [EnemySoundFixes](https://thunderstore.io/c/lethal-company/p/ButteryStancakes/EnemySoundFixes/).
   - [Client] Fixed the old bird missiles getting stuck if the owning old bird is destroyed by an earth leviathan.
+  - [Client] Fixed old birds being desynced on clients after the first flight. [@digger1213](https://github.com/digger1213)
+  - [Client] Fixed nutcrackers not moving whilst aiming for clients. [@digger1213](https://github.com/digger1213)
+
 - Spike Trap Fixes
   - [Host] Fixed interval spike trap entrance safety period activating when exiting the facility instead of when entering.
   - [Host] Fixed interval spike trap entrance safety period not preventing death if the trap slams at the exact same time that you enter.
