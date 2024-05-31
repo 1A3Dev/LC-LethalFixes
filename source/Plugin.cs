@@ -150,6 +150,14 @@ namespace LethalFixes
             }
         }
 
+        // [Host] Fixed stormy weather typically only working once each session
+        [HarmonyPatch(typeof(StormyWeather), "OnDisable")]
+        [HarmonyPostfix]
+        public static void Fix_StormyNullRef(ref StormyWeather __instance)
+        {
+            ((List<GrabbableObject>)metalObjects.GetValue(__instance)).Clear();
+        }
+
         // [Host] Fixed flooded weather only working for the first day of each session
         private static FieldInfo nextTimeSync = AccessTools.Field(typeof(TimeOfDay), "nextTimeSync");
         [HarmonyPatch(typeof(StartOfRound), "ResetStats")]
