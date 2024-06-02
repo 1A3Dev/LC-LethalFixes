@@ -1,5 +1,6 @@
 ### 1.1.2
 
+- [Host] Fixed stormy weather only working for the first stormy day of each session if items are left outside. [@digger1213](https://github.com/digger1213)
 - [Client] Fixed the main menu buttons not being aligned properly.
   - The same as [Align Menu Buttons](https://thunderstore.io/c/lethal-company/p/GoldenGuy1000/Align_Menu_Buttons/).
 - [Client] Fixed old birds being desynced on clients after the first flight. [@digger1213](https://github.com/digger1213)

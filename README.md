@@ -16,6 +16,7 @@ This mod fixes a bunch of common Lethal Company issues:
   - [Host] Fixed clients seeing the default disconnect message when kicked instead of a kick message.
   - [Host] Fixed the host's rank not syncing to clients on initial join.
     - The same as [RankFix](https://thunderstore.io/c/lethal-company/p/Glitch/RankFix/).
+  - [Host] Fixed stormy weather only working for the first stormy day of each session if items are left outside.
   - [Client] Fixed the start lever cooldown not being reset on the deadline when attempting to route to the company after attempting to go to a regular moon.
   - [Client] Fixed the terminal scan command including items inside the ship in the calculation of the approximate value.
   - [Client] Fixed the shotgun having increased damage for clients.
