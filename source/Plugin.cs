@@ -324,7 +324,7 @@ namespace LethalFixes
             return (alreadyReplaced ? newInstructions : instructions).AsEnumerable();
         }
 
-        // [Client] Fix other players reloading a shotgun making the item you have in the same hotbar slot as they had their ammo in invisible
+        // [Client] Fixed other players reloading a shotgun making the item you have in the same hotbar slot that they had their ammo in invisible
         [HarmonyPatch(typeof(PlayerControllerB), "DestroyItemInSlot")]
         [HarmonyTranspiler]
         private static IEnumerable<CodeInstruction> Shotgun_ReloadItemInvis(IEnumerable<CodeInstruction> instructions)

@@ -27,6 +27,7 @@ This mod fixes a bunch of common Lethal Company issues:
   - [Client] Fixed the name above your head in LAN not including the player id (currently it just shows Player #).
   - [Client] Fixed the main menu buttons not being aligned properly.
     - The same as [Align Menu Buttons](https://thunderstore.io/c/lethal-company/p/GoldenGuy1000/Align_Menu_Buttons/).
+  - [Client] Fixed other players reloading a shotgun making the item you have in the same hotbar slot that they had their ammo in invisible.
   - [Client] Changed Dissonance log levels to fix log spam during voice chat lag.
     - The same as [DissonanceLagFix](https://thunderstore.io/c/lethal-company/p/linkoid/DissonanceLagFix/) but with the ability to change the log level in the config and with all of the log levels changed instead of only the recording one.
     - Mod Default: Error (4)
