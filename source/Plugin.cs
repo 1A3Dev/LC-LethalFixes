@@ -285,7 +285,7 @@ namespace LethalFixes
 
             if (!alreadyReplaced) PluginLoader.logSource.LogWarning("KickPlayer failed to add reason");
 
-            return newInstructions.AsEnumerable();
+            return (alreadyReplaced ? newInstructions : instructions).AsEnumerable();
         }
 
         // [Client] Fix shotgun damage
@@ -321,7 +321,51 @@ namespace LethalFixes
 
             if (!alreadyReplaced) PluginLoader.logSource.LogWarning("ShotgunItem failed to patch ShootGun");
 
-            return newInstructions.AsEnumerable();
+            return (alreadyReplaced ? newInstructions : instructions).AsEnumerable();
+        }
+
+        // [Client] Fix other players reloading a shotgun making the item you have in the same hotbar slot as they had their ammo in invisible
+        [HarmonyPatch(typeof(PlayerControllerB), "DestroyItemInSlot")]
+        [HarmonyTranspiler]
+        private static IEnumerable<CodeInstruction> Shotgun_ReloadItemInvis(IEnumerable<CodeInstruction> instructions)
+        {
+            var newInstructions = new List<CodeInstruction>();
+            bool foundActivatingItem = false;
+            bool addedCall = false;
+            bool alreadyReplaced = false;
+            Label skipLabel = new Label();
+            foreach (var instruction in instructions)
+            {
+                if (!foundActivatingItem && instruction.opcode == OpCodes.Stfld && instruction.operand?.ToString() == "System.Boolean activatingItem")
+                {
+                    foundActivatingItem = true;
+                }
+                else if (!addedCall && foundActivatingItem && instruction.opcode == OpCodes.Call && instruction.operand?.ToString() == "HUDManager get_Instance()")
+                {
+                    addedCall = true;
+
+                    CodeInstruction custIns0 = new CodeInstruction(OpCodes.Ldarg_0);
+                    custIns0.labels.AddRange(instruction.labels);
+                    instruction.labels.Clear();
+                    newInstructions.Add(custIns0);
+
+                    CodeInstruction custIns1 = new CodeInstruction(OpCodes.Call, AccessTools.PropertyGetter(typeof(PlayerControllerB), nameof(PlayerControllerB.IsOwner)));
+                    newInstructions.Add(custIns1);
+                    CodeInstruction custIns2 = new CodeInstruction(OpCodes.Brfalse, skipLabel);
+                    newInstructions.Add(custIns2);
+                }
+                else if (!alreadyReplaced && addedCall && instruction.opcode == OpCodes.Ldarg_0)
+                {
+                    alreadyReplaced = true;
+                    instruction.labels.Add(skipLabel);
+                }
+
+                newInstructions.Add(instruction);
+            }
+
+            if (!alreadyReplaced) PluginLoader.logSource.LogWarning("PlayerControllerB failed to patch DestroyItemInSlot");
+
+            return (alreadyReplaced ? newInstructions : instructions).AsEnumerable();
         }
 
         // [Host] Rank Fix
