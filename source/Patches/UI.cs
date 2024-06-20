@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using GameNetcodeStuff;
+﻿using GameNetcodeStuff;
 using HarmonyLib;
 using TMPro;
 using Unity.Netcode;
@@ -54,17 +53,15 @@ namespace LethalFixes.Patches
         }
 
         // [Client] Align Menu Buttons
-        private static FieldInfo startHostButton = AccessTools.Field(typeof(MenuManager), "startHostButton");
         [HarmonyPatch(typeof(MenuManager), "OnEnable")]
         [HarmonyPostfix]
-        public static void AlignMenuButtons(MenuManager __instance)
+        public static void AlignMenuButtons(MenuManager __instance, Button ___startHostButton)
         {
-            Button startHostButtonVal = (Button)startHostButton.GetValue(__instance);
-            if (startHostButtonVal != null)
+            if (___startHostButton != null)
             {
-                float x = startHostButtonVal.transform.localPosition.x;
-                float z = startHostButtonVal.transform.localPosition.z;
-                Button[] componentsInChildren = __instance.menuButtons.GetComponentsInChildren<Button>();
+                float x = ___startHostButton.transform.localPosition.x;
+                float z = ___startHostButton.transform.localPosition.z;
+                Button[] componentsInChildren = __instance.menuButtons.GetComponentsInChildren<Button>(true);
                 foreach (Button val in componentsInChildren)
                 {
                     val.transform.localPosition = new Vector3(x, val.transform.localPosition.y, z);

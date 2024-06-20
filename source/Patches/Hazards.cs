@@ -38,22 +38,20 @@ namespace LethalFixes.Patches
         }
 
         // [Host] Fixed spike trap entrance safety period activating when exiting the facility instead of when entering
-        internal static FieldInfo nearEntrance = AccessTools.Field(typeof(SpikeRoofTrap), "nearEntrance");
         internal static AudioClip spikeTrapActivateSound = null;
         internal static AudioClip spikeTrapDeactivateSound = null;
         [HarmonyPatch(typeof(SpikeRoofTrap), "Start")]
         [HarmonyPostfix]
-        public static void Fix_SpikeTrapSafety_Start(ref SpikeRoofTrap __instance)
+        public static void Fix_SpikeTrapSafety_Start(ref SpikeRoofTrap __instance, ref EntranceTeleport ___nearEntrance)
         {
-            EntranceTeleport nearEntranceVal = (EntranceTeleport)nearEntrance.GetValue(__instance);
-            if (nearEntranceVal != null)
+            if (___nearEntrance != null)
             {
                 EntranceTeleport[] array = Object.FindObjectsByType<EntranceTeleport>(FindObjectsSortMode.None);
                 for (int i = 0; i < array.Length; i++)
                 {
-                    if (array[i].isEntranceToBuilding != nearEntranceVal.isEntranceToBuilding && array[i].entranceId == nearEntranceVal.entranceId)
+                    if (array[i].isEntranceToBuilding != ___nearEntrance.isEntranceToBuilding && array[i].entranceId == ___nearEntrance.entranceId)
                     {
-                        nearEntrance.SetValue(__instance, array[i]);
+                        ___nearEntrance = array[i];
                         break;
                     }
                 }
@@ -72,25 +70,22 @@ namespace LethalFixes.Patches
 
         // [Client] Fixed spike trap entrance safety period not preventing death if the trap slams at the exact same time that you enter
         // [Client] Fixed player detection spike trap having no entrance safety period
-        internal static FieldInfo slamOnIntervals = AccessTools.Field(typeof(SpikeRoofTrap), "slamOnIntervals");
         [HarmonyPatch(typeof(SpikeRoofTrap), "Update")]
         [HarmonyPrefix]
-        public static void Fix_SpikeTrapSafety_Update(ref SpikeRoofTrap __instance)
+        public static void Fix_SpikeTrapSafety_Update(ref SpikeRoofTrap __instance, EntranceTeleport ___nearEntrance, bool ___slamOnIntervals)
         {
             if (__instance.trapActive)
             {
                 float safePeriodTime = 1.2f;
                 float safePeriodDistance = 5f;
 
-                EntranceTeleport nearEntranceVal = (EntranceTeleport)nearEntrance.GetValue(__instance);
-                if (nearEntranceVal != null && Time.realtimeSinceStartup - nearEntranceVal.timeAtLastUse < safePeriodTime)
+                if (___nearEntrance != null && Time.realtimeSinceStartup - ___nearEntrance.timeAtLastUse < safePeriodTime)
                 {
                     __instance.timeSinceMovingUp = Time.realtimeSinceStartup;
                 }
                 else if (FixesConfig.SpikeTrapSafetyInverse.Value)
                 {
-                    bool slamOnIntervalsVal = (bool)slamOnIntervals.GetValue(__instance);
-                    if (slamOnIntervalsVal)
+                    if (___slamOnIntervals)
                     {
                         foreach (KeyValuePair<int, float> keyValue in lastInverseTime)
                         {

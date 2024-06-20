@@ -186,34 +186,25 @@ namespace LethalFixes.Patches
         }
 
         // [Client] Fixed entrance nearby activity including dead enemies
-        internal static FieldInfo entranceExitPoint = AccessTools.Field(typeof(EntranceTeleport), "exitPoint");
-        internal static FieldInfo entranceTriggerScript = AccessTools.Field(typeof(EntranceTeleport), "triggerScript");
-        internal static FieldInfo checkForEnemiesInterval = AccessTools.Field(typeof(EntranceTeleport), "checkForEnemiesInterval");
         [HarmonyPatch(typeof(EntranceTeleport), "Update")]
         [HarmonyPrefix]
-        public static bool Fix_NearActivityDead(EntranceTeleport __instance)
+        public static bool Fix_NearActivityDead(EntranceTeleport __instance, ref Transform ___exitPoint, InteractTrigger ___triggerScript, ref float ___checkForEnemiesInterval)
         {
-            InteractTrigger triggerScriptVal = (InteractTrigger)entranceTriggerScript.GetValue(__instance);
-            float checkForEnemiesIntervalVal = (float)checkForEnemiesInterval.GetValue(__instance);
-            if (__instance.isEntranceToBuilding && triggerScriptVal != null && checkForEnemiesIntervalVal <= 0f)
+            if (__instance.isEntranceToBuilding && ___triggerScript != null && ___checkForEnemiesInterval <= 0f)
             {
-                Transform exitPointVal = (Transform)entranceExitPoint.GetValue(__instance);
-                if (!exitPointVal)
+                if (!___exitPoint)
                 {
-                    if (__instance.FindExitPoint())
-                    {
-                        exitPointVal = (Transform)entranceExitPoint.GetValue(__instance);
-                    }
+                    __instance.FindExitPoint();
                 }
 
-                if (exitPointVal != null)
+                if (___exitPoint != null)
                 {
-                    checkForEnemiesInterval.SetValue(__instance, 1f);
+                    ___checkForEnemiesInterval = 1f;
                     bool flag = false;
                     for (int i = 0; i < RoundManager.Instance.SpawnedEnemies.Count; i++)
                     {
                         EnemyAI enemyAI = RoundManager.Instance.SpawnedEnemies[i];
-                        if (enemyAI != null && !enemyAI.isEnemyDead && !enemyAI.isOutside && Vector3.Distance(enemyAI.transform.position, exitPointVal.transform.position) < FixesConfig.NearActivityDistance.Value)
+                        if (enemyAI != null && !enemyAI.isEnemyDead && !enemyAI.isOutside && Vector3.Distance(enemyAI.transform.position, ___exitPoint.transform.position) < FixesConfig.NearActivityDistance.Value)
                         {
                             flag = true;
                             break;
@@ -221,9 +212,9 @@ namespace LethalFixes.Patches
                     }
 
                     string newTip = flag ? "[Near activity detected!]" : "Enter: [LMB]";
-                    if (triggerScriptVal.hoverTip != newTip)
+                    if (___triggerScript.hoverTip != newTip)
                     {
-                        triggerScriptVal.hoverTip = newTip;
+                        ___triggerScript.hoverTip = newTip;
                     }
 
                     return false;
@@ -256,39 +247,35 @@ namespace LethalFixes.Patches
         }
 
         // [Host] Fix RadMech being unable to move after grabbing someone
-        private static FieldInfo disableWalking = AccessTools.Field(typeof(RadMechAI), "disableWalking");
-        private static FieldInfo attemptGrabTimer = AccessTools.Field(typeof(RadMechAI), "attemptGrabTimer");
         [HarmonyPatch(typeof(RadMechAI), "CancelTorchPlayerAnimation")]
         [HarmonyPostfix]
-        public static void RadMech_CancelTorch(RadMechAI __instance)
+        public static void RadMech_CancelTorch(RadMechAI __instance, ref bool ___disableWalking, ref float ___attemptGrabTimer)
         {
             if (__instance.IsServer)
             {
-                disableWalking.SetValue(__instance, false);
-                attemptGrabTimer.SetValue(__instance, 5f);
+                ___disableWalking = false;
+                ___attemptGrabTimer = 5f;
             }
         }
 
         // [Client] Fix RadMech teleporting to flight destinations on client for every flight after the first
         // [Client] Fix RadMech desyncing on clients (invisible robot bug)
-        private static FieldInfo finishingFlight = AccessTools.Field(typeof(RadMechAI), "finishingFlight");
-        private static FieldInfo inFlyingMode = AccessTools.Field(typeof(RadMechAI), "inFlyingMode");
         [HarmonyPatch(typeof(RadMechAI), "Update")]
         [HarmonyPrefix]
-        public static void RadMech_SetFinishingFlight(RadMechAI __instance)
+        public static void RadMech_SetFinishingFlight(RadMechAI __instance, ref bool ___finishingFlight, ref bool ___inFlyingMode)
         {
             if (!__instance.IsServer && __instance.previousBehaviourStateIndex == 2 && __instance.currentBehaviourStateIndex != 2)
             {
                 // Fix teleporting on the next flight
-                if ((bool)finishingFlight.GetValue(__instance))
+                if (___finishingFlight)
                 {
-                    finishingFlight.SetValue(__instance, false);
+                    ___finishingFlight = false;
                     //PluginLoader.logSource.LogInfo("[RadMech] Set finishingFlight to false");
                 }
                 // inFlyingMode is true but we're not in the flying state - desync bug happened
-                if ((bool)inFlyingMode.GetValue(__instance))
+                if (___inFlyingMode)
                 {
-                    inFlyingMode.SetValue(__instance, false);
+                    ___inFlyingMode = false;
                     __instance.inSpecialAnimation = false;
                     //PluginLoader.logSource.LogInfo("[RadMech] Set inFlyingMode to false");
                 }
