@@ -1,6 +1,6 @@
 ### 1.1.4
 
-- Fixed button to join a LAN lobby not being centered aligned.
+- Fixed button to join a LAN lobby not being aligned properly.
 
 ### 1.1.3
 
