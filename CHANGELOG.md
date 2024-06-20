@@ -1,3 +1,7 @@
+### 1.1.4
+
+- Fixed button to join a LAN lobby not being centered aligned.
+
 ### 1.1.3
 
 - [Client] Fixed other players reloading a shotgun making the item you have in the same hotbar slot that they had their ammo in invisible.
