@@ -53,7 +53,7 @@
     </ItemGroup>
 
     <ItemGroup Condition="$(CI) == 'true'">
-        <PackageReference Include="LethalCompany.GameLibs.Steam" Version="50.0.1-ngd.0" />
+        <PackageReference Include="LethalCompany.GameLibs.Steam" Version="55.0.0-beta.0-ngd.0" />
     </ItemGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
