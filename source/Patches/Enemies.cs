@@ -40,15 +40,6 @@ namespace LethalFixes.Patches
             }
         }
 
-        // [Client] Fixed the forest giant being able to insta-kill when spawning
-        [HarmonyPatch(typeof(ForestGiantAI), "OnCollideWithPlayer")]
-        [HarmonyPrefix]
-        public static bool Fix_GiantInstantKill(ForestGiantAI __instance, Collider other)
-        {
-            PlayerControllerB playerController = __instance.MeetsStandardPlayerCollisionConditions(other);
-            return playerController != null;
-        }
-
         // [Host] Fixed outdoor enemies being able to spawn inside the outdoor objects (rocks/pumpkins etc)
         internal static Dictionary<string, int> outsideObjectWidths = new Dictionary<string, int>();
         internal static List<Transform> cachedOutsideObjects = new List<Transform>();
@@ -173,7 +164,7 @@ namespace LethalFixes.Patches
                 {
                     EnemyVent origVent = vent;
                     vent = list[__instance.AnomalyRandom.Next(list.Count)];
-                    PluginLoader.logSource.LogInfo($"[AssignRandomEnemyToVent] Vent {origVent.GetInstanceID()} is already occupied, replacing with un-occupied vent: {vent.GetInstanceID()}!");
+                    PluginLoader.logSource.LogInfo($"[AssignRandomEnemyToVent] Vent {origVent.GetInstanceID()} is already occupied ({origVent.enemyType.enemyName}), replacing with un-occupied vent: {vent.GetInstanceID()}!");
                 }
                 else
                 {
@@ -183,6 +174,50 @@ namespace LethalFixes.Patches
             }
 
             return true;
+        }
+
+        [HarmonyPatch(typeof(RoundManager), "AssignRandomEnemyToVent")]
+        [HarmonyPostfix]
+        static void AssignRandomEnemyToVent_GroupsOf(RoundManager __instance, EnemyVent vent, int ___currentHour, bool __result)
+        {
+            EnemyType enemy = vent.enemyType;
+            if (__result && enemy.spawnInGroupsOf > 1)
+            {
+                int enemyIndex = vent.enemyTypeIndex;
+                int time = (int)vent.spawnTime;
+                PluginLoader.logSource.LogInfo($"Enemy \"{enemy.enemyName}\" spawned in vent, requesting group of {enemy.spawnInGroupsOf}");
+
+                int spawnsLeft = enemy.spawnInGroupsOf - 1;
+                List<EnemyVent> vents = __instance.allEnemyVents.Where(enemyVent => !enemyVent.occupied).ToList();
+
+                while (spawnsLeft > 0)
+                {
+                    if (vents.Count <= 0) return;
+                    if (enemy.PowerLevel > __instance.currentMaxInsidePower - __instance.currentEnemyPower) return;
+
+                    EnemyVent vent2 = vents[__instance.AnomalyRandom.Next(0, vents.Count)];
+
+                    __instance.currentEnemyPower += enemy.PowerLevel;
+                    vent2.enemyType = enemy;
+                    vent2.enemyTypeIndex = enemyIndex;
+                    vent2.occupied = true;
+                    vent2.spawnTime = time;
+                    if (__instance.timeScript.hour - ___currentHour <= 0)
+                    {
+                        vent2.SyncVentSpawnTimeClientRpc(time, enemyIndex);
+                    }
+                    enemy.numberSpawned++;
+
+                    __instance.enemySpawnTimes.Add(time);
+                    vents.Remove(vent2);
+
+                    PluginLoader.logSource.LogInfo($"Spawned additional \"{enemy.enemyName}\" in vents");
+                    spawnsLeft--;
+                }
+
+                if (spawnsLeft < enemy.spawnInGroupsOf - 1)
+                    __instance.enemySpawnTimes.Sort();
+            }
         }
 
         // [Client] Fixed entrance nearby activity including dead enemies

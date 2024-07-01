@@ -8,6 +8,7 @@ using BepInEx.Configuration;
 using BepInEx.Logging;
 using GameNetcodeStuff;
 using HarmonyLib;
+using LethalFixes.Patches;
 using Unity.Netcode;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -20,7 +21,7 @@ namespace LethalFixes
         internal const string modGUID = "Dev1A3.LethalFixes";
         internal const string modVersion = "1.0.0";
 
-        private readonly Harmony harmony = new Harmony(modGUID);
+        internal static readonly Harmony harmony = new Harmony(modGUID);
 
         private static bool initialized;
 
@@ -55,19 +56,40 @@ namespace LethalFixes
             Dissonance.Logs.SetLogLevel(Dissonance.LogCategory.Playback, (Dissonance.LogLevel)dissonanceLogLevel);
             Dissonance.Logs.SetLogLevel(Dissonance.LogCategory.Network, (Dissonance.LogLevel)dissonanceLogLevel);
 
-            Assembly patches = Assembly.GetExecutingAssembly();
-            harmony.PatchAll(patches);
+            harmony.PatchAll(typeof(Patches_General));
+            harmony.PatchAll(typeof(Patches_Enemy));
+            harmony.PatchAll(typeof(Patches_Hazards));
+            harmony.PatchAll(typeof(Patches_UI));
         }
 
         public void BindConfig<T>(ref ConfigEntry<T> config, string section, string key, T defaultValue, string description = "")
         {
             config = Config.Bind<T>(section, key, defaultValue, description);
         }
+
+        public static int GetCurrentGameVersion()
+        {
+            int currentVer = GameNetworkManager.Instance.gameVersionNum;
+            if (currentVer >= 16480)
+            {
+                return currentVer - 16440;
+            }
+            else if (currentVer >= 9999)
+            {
+                return currentVer - 9950;
+            }
+            else
+            {
+                return currentVer;
+            }
+        }
     }
+
     internal class FixesConfig
     {
         internal static ConfigEntry<float> NearActivityDistance;
         internal static ConfigEntry<bool> ExactItemScan;
+        internal static ConfigEntry<bool> PropShadows;
         internal static ConfigEntry<bool> VACSpeakingIndicator;
         internal static ConfigEntry<bool> ModTerminalScan;
         internal static ConfigEntry<bool> SpikeTrapActivateSound;
@@ -80,6 +102,7 @@ namespace LethalFixes
             AcceptableValueRange<float> AVR_NearActivityDistance = new AcceptableValueRange<float>(0f, 100f);
             NearActivityDistance = PluginLoader.Instance.Config.Bind("Settings", "Nearby Activity Distance", 7.7f, new ConfigDescription("How close should an enemy be to an entrance for it to be detected as nearby activity?", AVR_NearActivityDistance));
             PluginLoader.Instance.BindConfig(ref ExactItemScan, "Settings", "Exact Item Scan", false, "Should the terminal scan command show the exact total value?");
+            PluginLoader.Instance.BindConfig(ref PropShadows, "Settings", "Prop Shadows", false, "Setting this to false will disable prop shadows to improve performance.");
             PluginLoader.Instance.BindConfig(ref VACSpeakingIndicator, "Settings", "Voice Activity Icon", true, "Should the PTT speaking indicator be visible whilst using voice activation?");
             PluginLoader.Instance.BindConfig(ref ModTerminalScan, "Compatibility", "Terminal Scan Command", true, "Should the terminal scan command be modified by this mod?");
             PluginLoader.Instance.BindConfig(ref SpikeTrapActivateSound, "Spike Trap", "Sound On Enable", false, "Should spike traps make a sound when re-enabled after being disabled via the terminal?");
@@ -96,6 +119,23 @@ namespace LethalFixes
     [HarmonyPatch]
     internal static class Patches_General
     {
+
+        [HarmonyPatch(typeof(GameNetworkManager), "Start")]
+        [HarmonyPostfix]
+        private static void Start_VersionPatches()
+        {
+            if (PluginLoader.GetCurrentGameVersion() == 50)
+            {
+                PluginLoader.logSource.LogInfo("Loading Version Patches: v50");
+                PluginLoader.harmony.PatchAll(typeof(Patches_v50));
+            }
+            else if (PluginLoader.GetCurrentGameVersion() >= 55)
+            {
+                PluginLoader.logSource.LogInfo("Loading Version Patches: v55");
+                PluginLoader.harmony.PatchAll(typeof(Patches_v55));
+            }
+        }
+
         // [Client] RPC Lag Fix
         [HarmonyPatch(typeof(NetworkManager), "Awake")]
         [HarmonyPostfix]
@@ -140,7 +180,7 @@ namespace LethalFixes
             }
 
             // [Client] Fixed version of NoPropShadows
-            if (removeLightShadows.Contains(__instance.itemProperties.name))
+            if (!FixesConfig.PropShadows.Value && removeLightShadows.Contains(__instance.itemProperties.name))
             {
                 Light light = __instance.GetComponentInChildren<Light>();
                 if (light != null)
@@ -207,7 +247,7 @@ namespace LethalFixes
                             }
                             else if (array[n].itemProperties.maxValue >= array[n].itemProperties.minValue)
                             {
-                                outsideValue += Mathf.Clamp(random.Next(array[n].itemProperties.minValue, array[n].itemProperties.maxValue), array[n].scrapValue - 6 * outsideTotal, array[n].scrapValue + 9 * outsideTotal);
+                                outsideValue += Mathf.Clamp((int)(random.Next(array[n].itemProperties.minValue, array[n].itemProperties.maxValue) * RoundManager.Instance.scrapValueMultiplier), array[n].scrapValue - 6 * outsideTotal, array[n].scrapValue + 9 * outsideTotal);
                             }
                             outsideTotal++;
                         }
@@ -219,7 +259,7 @@ namespace LethalFixes
                             }
                             else if (array[n].itemProperties.maxValue >= array[n].itemProperties.minValue)
                             {
-                                insideValue += Mathf.Clamp(random.Next(array[n].itemProperties.minValue, array[n].itemProperties.maxValue), array[n].scrapValue - 6 * insideTotal, array[n].scrapValue + 9 * insideTotal);
+                                insideValue += Mathf.Clamp((int)(random.Next(array[n].itemProperties.minValue, array[n].itemProperties.maxValue) * RoundManager.Instance.scrapValueMultiplier), array[n].scrapValue - 6 * insideTotal, array[n].scrapValue + 9 * insideTotal);
                             }
                             insideTotal++;
                         }
@@ -284,42 +324,6 @@ namespace LethalFixes
             }
 
             if (!alreadyReplaced) PluginLoader.logSource.LogWarning("KickPlayer failed to add reason");
-
-            return (alreadyReplaced ? newInstructions : instructions).AsEnumerable();
-        }
-
-        // [Client] Fix shotgun damage
-        [HarmonyPatch(typeof(ShotgunItem), "ShootGun")]
-        [HarmonyTranspiler]
-        private static IEnumerable<CodeInstruction> Shotgun_ShootGun(IEnumerable<CodeInstruction> instructions)
-        {
-            var newInstructions = new List<CodeInstruction>();
-            bool alreadyReplaced = false;
-            foreach (var instruction in instructions)
-            {
-                if (!alreadyReplaced)
-                {
-                    if (instruction.opcode == OpCodes.Ldfld && instruction.operand?.ToString() == "UnityEngine.RaycastHit[] enemyColliders")
-                    {
-                        alreadyReplaced = true;
-
-                        Label retLabel = new Label();
-                        CodeInstruction custIns1 = new CodeInstruction(OpCodes.Call, AccessTools.PropertyGetter(typeof(ShotgunItem), nameof(ShotgunItem.IsOwner)));
-                        newInstructions.Add(custIns1);
-                        CodeInstruction custIns2 = new CodeInstruction(OpCodes.Brtrue, retLabel);
-                        newInstructions.Add(custIns2);
-                        CodeInstruction custIns3 = new CodeInstruction(OpCodes.Ret);
-                        newInstructions.Add(custIns3);
-                        CodeInstruction custIns4 = new CodeInstruction(OpCodes.Ldarg_0);
-                        custIns4.labels.Add(retLabel);
-                        newInstructions.Add(custIns4);
-                    }
-                }
-
-                newInstructions.Add(instruction);
-            }
-
-            if (!alreadyReplaced) PluginLoader.logSource.LogWarning("ShotgunItem failed to patch ShootGun");
 
             return (alreadyReplaced ? newInstructions : instructions).AsEnumerable();
         }

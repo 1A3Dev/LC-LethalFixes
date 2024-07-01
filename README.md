@@ -18,8 +18,7 @@ This mod fixes a bunch of common Lethal Company issues:
     - The same as [RankFix](https://thunderstore.io/c/lethal-company/p/Glitch/RankFix/).
   - [Host] Fixed stormy weather only working for the first stormy day of each session if items are left outside.
   - [Client] Fixed the start lever cooldown not being reset on the deadline when attempting to route to the company after attempting to go to a regular moon.
-  - [Client] Fixed the terminal scan command including items inside the ship in the calculation of the approximate value.
-  - [Client] Fixed the shotgun having increased damage for clients.
+  - [Client] Fixed the terminal scan command approximate value calculation to use the scrapValueMultiplier and exclude items inside the ship.
   - [Client] Removed shadows from the fancy lamp & apparatus to improve performance.
     - The same as [NoPropShadows](https://thunderstore.io/c/lethal-company/p/Glitch/NoPropShadows/) but without the requirement of having to re-join the lobby for the shadows to be removed from newly spawned props.
   - [Client] Made PTT speaking indicator only visible when speaking.
@@ -41,6 +40,7 @@ This mod fixes a bunch of common Lethal Company issues:
   - [Host] Fixed outdoor enemies being able to spawn inside the outdoor objects.
   - [Host] Fixed indoor enemies being able to be assigned to vents that were already occupied during the same hour.
     - In vanilla when this bug occurs it results in less enemies spawning since the original enemy that was going to spawn in the vent gets overwritten by the new one.
+  - [Host] Fixed indoor enemies being unable to spawn in groups. [@ButteryStancakes](https://github.com/ButteryStancakes)
   - [Host] Fixed butler knife and metal ordered items not attracting lightning until the next round.
   - [Host] Fixed the hoarder bug not dropping the held item if it's killed too quickly.
   - [Host] Fixed the old bird being unable to move after successfully grabbing a player.
@@ -52,6 +52,7 @@ This mod fixes a bunch of common Lethal Company issues:
   - [Client] Fixed the old bird missiles getting stuck if the owning old bird is destroyed by an earth leviathan.
   - [Client] Fixed old birds being desynced on clients after the first flight. [@digger1213](https://github.com/digger1213)
   - [Client] Fixed nutcrackers not moving whilst aiming for clients. [@digger1213](https://github.com/digger1213)
+  - [Client] Fixed the hotbar breaking when grabbing an object from the shelves of the Company Cruiser whilst having an item in the currently selected slot.
 
 - Spike Trap Fixes
   - [Host] Fixed interval spike trap entrance safety period activating when exiting the facility instead of when entering.

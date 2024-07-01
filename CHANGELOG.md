@@ -1,3 +1,13 @@
+### 1.1.5
+
+- This version should still be compatible with v50!
+- Added a config option to enable prop shadows (which are disabled by default to help with performance).
+- [Client] Fixed the terminal scan command not using the scrapValueMultiplier for the approximate calculation.
+- [Host] Fixed indoor enemies being unable to spawn in groups (the barber is supposed to spawn two at once). [@ButteryStancakes](https://github.com/ButteryStancakes)
+- [v55] Removed the forest giant insta-kill fix since it was fixed in vanilla.
+- [v55] Removed the fix for the shotgun having increased damage for clients (fixed in vanilla).
+- [v55] [Client] Fixed the hotbar breaking when grabbing an object from the shelves of the Company Cruiser whilst having an item in the currently selected slot.
+
 ### 1.1.4
 
 - Fixed button to join a LAN lobby not being aligned properly.
