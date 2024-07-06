@@ -120,21 +120,16 @@ namespace LethalFixes
     internal static class Patches_General
     {
 
-        [HarmonyPatch(typeof(GameNetworkManager), "Start")]
-        [HarmonyPostfix]
-        private static void Start_VersionPatches()
-        {
-            if (PluginLoader.GetCurrentGameVersion() == 50)
-            {
-                PluginLoader.logSource.LogInfo("Loading Version Patches: v50");
-                PluginLoader.harmony.PatchAll(typeof(Patches_v50));
-            }
-            else if (PluginLoader.GetCurrentGameVersion() >= 55)
-            {
-                PluginLoader.logSource.LogInfo("Loading Version Patches: v55");
-                PluginLoader.harmony.PatchAll(typeof(Patches_v55));
-            }
-        }
+        //[HarmonyPatch(typeof(GameNetworkManager), "Start")]
+        //[HarmonyPostfix]
+        //private static void Start_VersionPatches()
+        //{
+        //    if (PluginLoader.GetCurrentGameVersion() == 50)
+        //    {
+        //        PluginLoader.logSource.LogInfo("Loading Version Patches: v50");
+        //        PluginLoader.harmony.PatchAll(typeof(Patches_v50));
+        //    }
+        //}
 
         // [Client] RPC Lag Fix
         [HarmonyPatch(typeof(NetworkManager), "Awake")]
@@ -196,15 +191,6 @@ namespace LethalFixes
         public static void Fix_StormyNullRef(ref StormyWeather __instance)
         {
             ((List<GrabbableObject>)metalObjects.GetValue(__instance)).Clear();
-        }
-
-        // [Host] Fixed flooded weather only working for the first day of each session
-        private static FieldInfo nextTimeSync = AccessTools.Field(typeof(TimeOfDay), "nextTimeSync");
-        [HarmonyPatch(typeof(StartOfRound), "ResetStats")]
-        [HarmonyPostfix]
-        public static void Fix_FloodedWeather()
-        {
-            nextTimeSync.SetValue(TimeOfDay.Instance, 0);
         }
 
         // [Client] Fixed the start lever cooldown not being reset on the deadline if you initially try routing to a regular moon
@@ -276,18 +262,6 @@ namespace LethalFixes
                     //insideValue = Math.Max(0, random.Next(insideValue - randomMultiplier, insideValue + randomMultiplier));
                     modifiedDisplayText = modifiedDisplayText.Replace("[scanForItems]", string.Format("There are {0} objects outside the ship, totalling at an approximate value of ${1}.", outsideTotal, outsideValue));
                 }
-            }
-        }
-
-        // [Client] Fixed Negative Weight Speed Glitch
-        [HarmonyPatch(typeof(PlayerControllerB), "Update")]
-        [HarmonyPostfix]
-        public static void Fix_NegativeCarryWeight(PlayerControllerB __instance)
-        {
-            if (__instance.carryWeight < 1)
-            {
-                __instance.carryWeight = 1;
-                PluginLoader.logSource.LogInfo("[NegativeCarryWeight] Carry Weight Changed To 1");
             }
         }
 

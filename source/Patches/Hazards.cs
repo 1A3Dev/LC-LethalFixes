@@ -8,54 +8,46 @@ namespace LethalFixes.Patches
     [HarmonyPatch]
     internal static class Patches_Hazards
     {
-        // [Client] Fixed spike trap entrance safety period not existing when inverse teleporting
-        public static Dictionary<int, float> lastInverseTime = new Dictionary<int, float>();
-        public static Dictionary<int, Vector3> lastInversePos = new Dictionary<int, Vector3>();
-        [HarmonyPatch(typeof(ShipTeleporter), "TeleportPlayerOutWithInverseTeleporter")]
-        [HarmonyPostfix]
-        public static void Fix_SpikeTrapSafety_InverseTeleport(int playerObj, Vector3 teleportPos)
+        // [Host] Fixed spike trap entrance safety period activating when exiting the facility instead of when entering
+        [HarmonyPatch(typeof(SpikeRoofTrap), "GetNearEntrance")]
+        [HarmonyPrefix]
+        public static bool GetNearEntrance(SpikeRoofTrap __instance, ref bool __result, ref EntranceTeleport ___nearEntrance)
         {
-            if (!StartOfRound.Instance.allPlayerScripts[playerObj].isPlayerDead)
+            bool flag = false;
+            EntranceTeleport[] array = Object.FindObjectsByType<EntranceTeleport>(FindObjectsSortMode.None);
+            for (int i = 0; i < array.Length; i++)
             {
-                if (lastInversePos.ContainsKey(playerObj))
+                if (!array[i].isEntranceToBuilding && Vector3.Distance(__instance.spikeTrapAudio.transform.position, array[i].entrancePoint.position) < 7f)
                 {
-                    lastInversePos[playerObj] = teleportPos;
-                }
-                else
-                {
-                    lastInversePos.Add(playerObj, teleportPos);
-                }
-                if (lastInverseTime.ContainsKey(playerObj))
-                {
-                    lastInverseTime[playerObj] = Time.realtimeSinceStartup;
-                }
-                else
-                {
-                    lastInverseTime.Add(playerObj, Time.realtimeSinceStartup);
+                    flag = true;
+                    ___nearEntrance = array[i];
                 }
             }
-        }
 
-        // [Host] Fixed spike trap entrance safety period activating when exiting the facility instead of when entering
-        internal static AudioClip spikeTrapActivateSound = null;
-        internal static AudioClip spikeTrapDeactivateSound = null;
-        [HarmonyPatch(typeof(SpikeRoofTrap), "Start")]
-        [HarmonyPostfix]
-        public static void Fix_SpikeTrapSafety_Start(ref SpikeRoofTrap __instance, ref EntranceTeleport ___nearEntrance)
-        {
-            if (___nearEntrance != null)
+            bool replaced = false;
+            if (flag)
             {
-                EntranceTeleport[] array = Object.FindObjectsByType<EntranceTeleport>(FindObjectsSortMode.None);
-                for (int i = 0; i < array.Length; i++)
+                for (int j = 0; j < array.Length; j++)
                 {
-                    if (array[i].isEntranceToBuilding != ___nearEntrance.isEntranceToBuilding && array[i].entranceId == ___nearEntrance.entranceId)
+                    if (array[j].entrancePoint == ___nearEntrance.exitPoint)
                     {
-                        ___nearEntrance = array[i];
-                        break;
+                        ___nearEntrance = array[j];
+                        replaced = true;
                     }
                 }
             }
 
+            __result = replaced;
+
+            return false;
+        }
+
+        internal static AudioClip spikeTrapActivateSound = null;
+        internal static AudioClip spikeTrapDeactivateSound = null;
+        [HarmonyPatch(typeof(SpikeRoofTrap), "Start")]
+        [HarmonyPostfix]
+        public static void Fix_SpikeTrapSafety_Start(ref SpikeRoofTrap __instance)
+        {
             spikeTrapActivateSound = Resources.FindObjectsOfTypeAll<Landmine>()?[0]?.mineDeactivate;
             spikeTrapDeactivateSound = Resources.FindObjectsOfTypeAll<Landmine>()?[0]?.mineDeactivate;
 
@@ -68,48 +60,17 @@ namespace LethalFixes.Patches
         }
 
         // [Client] Fixed spike trap entrance safety period not preventing death if the trap slams at the exact same time that you enter
-        // [Client] Fixed player detection spike trap having no entrance safety period
         [HarmonyPatch(typeof(SpikeRoofTrap), "Update")]
         [HarmonyPrefix]
-        public static void Fix_SpikeTrapSafety_Update(ref SpikeRoofTrap __instance, EntranceTeleport ___nearEntrance, bool ___slamOnIntervals)
+        public static void Fix_SpikeTrapSafety_Update(ref SpikeRoofTrap __instance, EntranceTeleport ___nearEntrance)
         {
             if (__instance.trapActive)
             {
                 float safePeriodTime = 1.2f;
-                float safePeriodDistance = 5f;
 
                 if (___nearEntrance != null && Time.realtimeSinceStartup - ___nearEntrance.timeAtLastUse < safePeriodTime)
                 {
                     __instance.timeSinceMovingUp = Time.realtimeSinceStartup;
-                }
-                else if (FixesConfig.SpikeTrapSafetyInverse.Value)
-                {
-                    if (___slamOnIntervals)
-                    {
-                        foreach (KeyValuePair<int, float> keyValue in lastInverseTime)
-                        {
-                            if (Time.realtimeSinceStartup - keyValue.Value < safePeriodTime)
-                            {
-                                if (lastInversePos.ContainsKey(keyValue.Key) && Vector3.Distance(lastInversePos[keyValue.Key], __instance.laserEye.position) <= safePeriodDistance)
-                                {
-                                    __instance.timeSinceMovingUp = Time.realtimeSinceStartup;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    else
-                    {
-                        // Player Detection
-                        int playerClientId = (int)GameNetworkManager.Instance.localPlayerController.playerClientId;
-                        if (lastInverseTime.ContainsKey(playerClientId) && Time.realtimeSinceStartup - lastInverseTime[playerClientId] < safePeriodTime)
-                        {
-                            if (lastInversePos.ContainsKey(playerClientId) && Vector3.Distance(lastInversePos[playerClientId], __instance.laserEye.position) <= safePeriodDistance)
-                            {
-                                __instance.timeSinceMovingUp = Time.realtimeSinceStartup;
-                            }
-                        }
-                    }
                 }
             }
         }

@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using GameNetcodeStuff;
 using HarmonyLib;
 using Unity.Netcode;
 using UnityEngine;
@@ -12,22 +11,6 @@ namespace LethalFixes.Patches
     [HarmonyPatch]
     internal static class Patches_Enemy
     {
-        // [Host] Fixed dead enemies being able to open doors
-        [HarmonyPatch(typeof(DoorLock), "OnTriggerStay")]
-        [HarmonyPrefix]
-        public static bool Fix_DeadEnemyDoors(Collider other)
-        {
-            if (other.CompareTag("Enemy"))
-            {
-                EnemyAICollisionDetect component = other.GetComponent<EnemyAICollisionDetect>();
-                if (component != null && component.mainScript.isEnemyDead)
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
-
         // [Host] Fixed the hoarder bug not dropping the held item if it's killed too quickly
         internal static MethodInfo DropItemAndCallDropRPC = AccessTools.Method(typeof(HoarderBugAI), "DropItemAndCallDropRPC");
         [HarmonyPatch(typeof(HoarderBugAI), "KillEnemy")]
@@ -152,30 +135,6 @@ namespace LethalFixes.Patches
             return false;
         }
 
-        // [Host] Fixed enemies being able to be assigned to vents that were already occupied during the same hour
-        [HarmonyPatch(typeof(RoundManager), "AssignRandomEnemyToVent")]
-        [HarmonyPrefix]
-        public static bool AssignRandomEnemyToVent(RoundManager __instance, ref EnemyVent vent)
-        {
-            if (vent.occupied)
-            {
-                List<EnemyVent> list = __instance.allEnemyVents.Where(x => !x.occupied).ToList();
-                if (list.Count > 0)
-                {
-                    EnemyVent origVent = vent;
-                    vent = list[__instance.AnomalyRandom.Next(list.Count)];
-                    PluginLoader.logSource.LogInfo($"[AssignRandomEnemyToVent] Vent {origVent.GetInstanceID()} is already occupied ({origVent.enemyType.enemyName}), replacing with un-occupied vent: {vent.GetInstanceID()}!");
-                }
-                else
-                {
-                    PluginLoader.logSource.LogWarning("[AssignRandomEnemyToVent] All vents are occupied!");
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
         [HarmonyPatch(typeof(RoundManager), "AssignRandomEnemyToVent")]
         [HarmonyPostfix]
         static void AssignRandomEnemyToVent_GroupsOf(RoundManager __instance, EnemyVent vent, int ___currentHour, bool __result)
@@ -220,44 +179,6 @@ namespace LethalFixes.Patches
             }
         }
 
-        // [Client] Fixed entrance nearby activity including dead enemies
-        [HarmonyPatch(typeof(EntranceTeleport), "Update")]
-        [HarmonyPrefix]
-        public static bool Fix_NearActivityDead(EntranceTeleport __instance, ref Transform ___exitPoint, InteractTrigger ___triggerScript, ref float ___checkForEnemiesInterval)
-        {
-            if (__instance.isEntranceToBuilding && ___triggerScript != null && ___checkForEnemiesInterval <= 0f)
-            {
-                if (!___exitPoint)
-                {
-                    __instance.FindExitPoint();
-                }
-
-                if (___exitPoint != null)
-                {
-                    ___checkForEnemiesInterval = 1f;
-                    bool flag = false;
-                    for (int i = 0; i < RoundManager.Instance.SpawnedEnemies.Count; i++)
-                    {
-                        EnemyAI enemyAI = RoundManager.Instance.SpawnedEnemies[i];
-                        if (enemyAI != null && !enemyAI.isEnemyDead && !enemyAI.isOutside && Vector3.Distance(enemyAI.transform.position, ___exitPoint.transform.position) < FixesConfig.NearActivityDistance.Value)
-                        {
-                            flag = true;
-                            break;
-                        }
-                    }
-
-                    string newTip = flag ? "[Near activity detected!]" : "Enter: [LMB]";
-                    if (___triggerScript.hoverTip != newTip)
-                    {
-                        ___triggerScript.hoverTip = newTip;
-                    }
-
-                    return false;
-                }
-            }
-            return true;
-        }
-
         // [Client] Fix the death sound of Baboon Hawk, Hoarder Bug & Nutcracker being set on the wrong field
         [HarmonyPatch(typeof(EnemyAI), "Start")]
         [HarmonyPostfix]
@@ -278,18 +199,6 @@ namespace LethalFixes.Patches
             if (__instance.RadMechScript == null)
             {
                 Object.Destroy(__instance.gameObject);
-            }
-        }
-
-        // [Host] Fix RadMech being unable to move after grabbing someone
-        [HarmonyPatch(typeof(RadMechAI), "CancelTorchPlayerAnimation")]
-        [HarmonyPostfix]
-        public static void RadMech_CancelTorch(RadMechAI __instance, ref bool ___disableWalking, ref float ___attemptGrabTimer)
-        {
-            if (__instance.IsServer)
-            {
-                ___disableWalking = false;
-                ___attemptGrabTimer = 5f;
             }
         }
 
@@ -315,29 +224,6 @@ namespace LethalFixes.Patches
                     //PluginLoader.logSource.LogInfo("[RadMech] Set inFlyingMode to false");
                 }
             }
-        }
-
-        // [Client] Fix Nutcracker not moving while aiming
-        [HarmonyPatch(typeof(NutcrackerEnemyAI), "AimGunClientRpc")]
-        [HarmonyPostfix]
-        static void Nutcracker_FixClientMovement(NutcrackerEnemyAI __instance)
-        {
-            if (!__instance.IsOwner)
-            {
-                __instance.transform.position = __instance.serverPosition;
-                __instance.transform.eulerAngles = __instance.serverRotation;
-            }
-            __instance.inSpecialAnimation = false; //this bool disables the nutcracker position sync when true, stopping clients from seeing the aim-walk
-            //PluginLoader.logSource.LogInfo("[Nutcracker] Set inSpecialAnimation to false");
-        }
-
-        [HarmonyPatch(typeof(NutcrackerEnemyAI), "Start")]
-        [HarmonyPostfix]
-        public static void Nutcracker_Start(NutcrackerEnemyAI __instance)
-        {
-            // Improve sync accuracy of nutcrackers hostside, will make their aim-walk less jerky in conjunction with the above fix
-            //PluginLoader.logSource.LogInfo($"[Nutcracker] Changing updatePositionThreshold from {__instance.updatePositionThreshold} to 0.5");
-            __instance.updatePositionThreshold = 0.5f;
         }
     }
 }

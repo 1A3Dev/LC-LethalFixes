@@ -18,11 +18,23 @@ namespace LethalFixes.Patches
         {
             try
             {
-                if (Steamworks.SteamApps.CurrentBetaName == "public_beta" && Steamworks.SteamApps.BuildId == 14043096)
+                if (Steamworks.SteamApps.CurrentBetaName == "public_beta")
                 {
-                    __instance.menuNotificationText.SetText("You are on an outdated version of v50. Please ensure beta participation is disabled in the preferences when right clicking the game on Steam!", true);
-                    __instance.menuNotificationButtonText.SetText("[ CLOSE ]", true);
-                    __instance.menuNotification.SetActive(true);
+                    string expectedVersion = null;
+                    if (Steamworks.SteamApps.BuildId == 14952473)
+                    {
+                        expectedVersion = "56";
+                    }
+                    else if (Steamworks.SteamApps.BuildId == 14043096)
+                    {
+                        expectedVersion = "50";
+                    }
+
+                    if (expectedVersion != null) {
+                        __instance.menuNotificationText.SetText($"You are on an outdated version of v{expectedVersion}. Please ensure beta participation is disabled in the preferences when right clicking the game on Steam!", true);
+                        __instance.menuNotificationButtonText.SetText("[ CLOSE ]", true);
+                        __instance.menuNotification.SetActive(true);
+                    }
                 }
             }
             catch { }
