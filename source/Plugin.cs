@@ -87,7 +87,6 @@ namespace LethalFixes
 
     internal class FixesConfig
     {
-        internal static ConfigEntry<float> NearActivityDistance;
         internal static ConfigEntry<bool> ExactItemScan;
         internal static ConfigEntry<bool> PropShadows;
         internal static ConfigEntry<bool> VACSpeakingIndicator;
@@ -99,8 +98,6 @@ namespace LethalFixes
         internal static ConfigEntry<int> LogLevelNetworkManager;
         internal static void InitConfig()
         {
-            AcceptableValueRange<float> AVR_NearActivityDistance = new AcceptableValueRange<float>(0f, 100f);
-            NearActivityDistance = PluginLoader.Instance.Config.Bind("Settings", "Nearby Activity Distance", 7.7f, new ConfigDescription("How close should an enemy be to an entrance for it to be detected as nearby activity?", AVR_NearActivityDistance));
             PluginLoader.Instance.BindConfig(ref ExactItemScan, "Settings", "Exact Item Scan", false, "Should the terminal scan command show the exact total value?");
             PluginLoader.Instance.BindConfig(ref PropShadows, "Settings", "Prop Shadows", false, "Setting this to false will disable prop shadows to improve performance.");
             PluginLoader.Instance.BindConfig(ref VACSpeakingIndicator, "Settings", "Voice Activity Icon", true, "Should the PTT speaking indicator be visible whilst using voice activation?");
