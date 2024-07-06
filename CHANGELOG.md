@@ -1,3 +1,7 @@
+### 1.1.6
+
+- Removed a bunch of fixes that are fixed in v56.
+
 ### 1.1.5
 
 - This version should still be compatible with v50!

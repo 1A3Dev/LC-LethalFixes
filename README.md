@@ -12,7 +12,6 @@ This mod fixes a bunch of common Lethal Company issues:
 - General Fixes
 
   - [Host] Made the debug menu test room & invincibility toggles show whether they are enabled/disabled.
-  - [Host] Fixed flooded weather only working for the first day of each session.
   - [Host] Fixed clients seeing the default disconnect message when kicked instead of a kick message.
   - [Host] Fixed the host's rank not syncing to clients on initial join.
     - The same as [RankFix](https://thunderstore.io/c/lethal-company/p/Glitch/RankFix/).
@@ -36,31 +35,20 @@ This mod fixes a bunch of common Lethal Company issues:
 
 - Enemy Fixes
 
-  - [Host] Fixed dead enemies being able to open doors.
   - [Host] Fixed outdoor enemies being able to spawn inside the outdoor objects.
-  - [Host] Fixed indoor enemies being able to be assigned to vents that were already occupied during the same hour.
-    - In vanilla when this bug occurs it results in less enemies spawning since the original enemy that was going to spawn in the vent gets overwritten by the new one.
   - [Host] Fixed indoor enemies being unable to spawn in groups. [@ButteryStancakes](https://github.com/ButteryStancakes)
   - [Host] Fixed butler knife and metal ordered items not attracting lightning until the next round.
   - [Host] Fixed the hoarder bug not dropping the held item if it's killed too quickly.
-  - [Host] Fixed the old bird being unable to move after successfully grabbing a player.
-  - [Client] Fixed entrance nearby activity including dead enemies.
-  - [Client] Fixed forest giants being able to kill before their spawn animation finishes.
-    - Similar to [LCSpawnOnPlayerFix](https://thunderstore.io/c/lethal-company/p/Suki/LCSpawnOnPlayerFix/) but instead of disabling nearby spawn points this fixes the actual cause of the issue.
   - [Client] Fixed the death sound of Baboon Hawks, Hoarder Bugs & Nutcrackers not working.
     - For additional sound fixes I would suggest using [EnemySoundFixes](https://thunderstore.io/c/lethal-company/p/ButteryStancakes/EnemySoundFixes/).
   - [Client] Fixed the old bird missiles getting stuck if the owning old bird is destroyed by an earth leviathan.
   - [Client] Fixed old birds being desynced on clients after the first flight. [@digger1213](https://github.com/digger1213)
-  - [Client] Fixed nutcrackers not moving whilst aiming for clients. [@digger1213](https://github.com/digger1213)
-  - [Client] Fixed the hotbar breaking when grabbing an object from the shelves of the Company Cruiser whilst having an item in the currently selected slot.
 
 - Spike Trap Fixes
   - [Host] Fixed interval spike trap entrance safety period activating when exiting the facility instead of when entering.
   - [Host] Fixed interval spike trap entrance safety period not preventing death if the trap slams at the exact same time that you enter.
-  - [Client] Fixed player detection spike trap having no entrance safety period.
   - [Client] Fixed player detection spike trap entrance safety period not preventing death if the trap slams at the exact same time that you enter.
   - [Client] Fixed spike traps having no indication when disabled via the terminal (they now play the landmine deactivate sound and have the light emissive disabled).
-  - [Client] Added the ability to enable the spike trap safety period when inverse teleporting (disabled by default).
 
 ### Configuration
 
@@ -68,7 +56,6 @@ The mod has some configuration options including:
 
 - Toggle for the terminal scan changes to allow compatibility with other mods.
 - Toggle for the spike trap terminal activate/deactivate sounds.
-- Toggle for the spike trap safety period when inverse teleporting.
 - Toggle to decide whether the PTT speaking indicator shows for voice activity.
 
 ### Support
@@ -82,7 +69,7 @@ You can get support in any the following places:
 ### Compatibility
 
 - Supported Game Versions:
-  - v50+
+  - v55+
 - Works Well With:
   - N/A
 - Not Compatible With:
