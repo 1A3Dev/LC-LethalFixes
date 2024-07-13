@@ -225,5 +225,17 @@ namespace LethalFixes.Patches
                 }
             }
         }
+
+        // [Client] Fix RadMech blowtorch particles not working after the first kill
+        [HarmonyPatch(typeof(RadMechAI), "EnableBlowtorch")]
+        [HarmonyPrefix]
+        public static void RadMech_EnableBlowtorch(RadMechAI __instance)
+        {
+            foreach (ParticleSystem particleSystem in __instance.blowtorchParticle.GetComponentsInChildren<ParticleSystem>())
+            {
+                particleSystem.gameObject.SetActive(false);
+                particleSystem.gameObject.SetActive(true);
+            }
+        }
     }
 }
