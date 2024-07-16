@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -351,6 +352,45 @@ namespace LethalFixes
             if (__instance.IsHost)
             {
                 GameNetworkManager.Instance.localPlayerController.playerLevelNumber = __instance.localPlayerLevel;
+            }
+        }
+
+        // [Client] Fix passenger being set to null on the local client
+        [HarmonyPatch(typeof(VehicleController), "SetPassengerInCar")]
+        [HarmonyPrefix]
+        private static bool SetPassengerInCar(PlayerControllerB player)
+        {
+            return player != null;
+        }
+
+        // [Client] Fix steering wheel desync
+        [HarmonyPatch(typeof(VehicleController), "SetCarEffects")]
+        [HarmonyPrefix]
+        public static void SetCarEffects(VehicleController __instance, ref float setSteering, ref float ___steeringWheelAnimFloat)
+        {
+            setSteering = 0f;
+            ___steeringWheelAnimFloat = __instance.steeringInput / 6f;
+        }
+
+        // [Client] Fix getting stuck in the drivers seat when getting in at the same time as someone else
+        public static IEnumerator CancelSpecialTriggerAnimationsAfterDelay(VehicleController __instance)
+        {
+            yield return new WaitForSeconds(1f);
+            InteractTrigger driverSeatTrigger = __instance?.transform?.Find("Triggers/DriverSide/DriverSeatTrigger")?.GetComponent<InteractTrigger>();
+            PlayerControllerB playerController = GameNetworkManager.Instance.localPlayerController;
+            if (playerController.currentTriggerInAnimationWith == driverSeatTrigger)
+            {
+                playerController.CancelSpecialTriggerAnimations();
+                PluginLoader.logSource.LogInfo("[TakeControlOfVehicle] Forced player out of drivers seat");
+            }
+        }
+        [HarmonyPatch(typeof(VehicleController), "TakeControlOfVehicle")]
+        [HarmonyPostfix]
+        public static void TakeControlOfVehicle(VehicleController __instance)
+        {
+            if (!__instance.localPlayerInControl)
+            {
+                __instance.StartCoroutine(CancelSpecialTriggerAnimationsAfterDelay(__instance));
             }
         }
     }

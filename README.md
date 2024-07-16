@@ -26,6 +26,9 @@ This mod fixes a bunch of common Lethal Company issues:
   - [Client] Fixed the main menu buttons not being aligned properly.
     - The same as [Align Menu Buttons](https://thunderstore.io/c/lethal-company/p/GoldenGuy1000/Align_Menu_Buttons/).
   - [Client] Fixed other players reloading a shotgun making the item you have in the same hotbar slot that they had their ammo in invisible.
+  - [Client] Fixed the current vehicle passenger being set to null on the local client.
+  - [Client] Fixed steering wheel visually desyncing from the actual steering angle.
+  - [Client] Fixed getting stuck in the drivers seat when getting in at the same time as someone else.
   - [Client] Changed Dissonance log levels to fix log spam during voice chat lag.
     - The same as [DissonanceLagFix](https://thunderstore.io/c/lethal-company/p/linkoid/DissonanceLagFix/) but with the ability to change the log level in the config and with all of the log levels changed instead of only the recording one.
     - Mod Default: Error (4)
@@ -36,13 +39,14 @@ This mod fixes a bunch of common Lethal Company issues:
 - Enemy Fixes
 
   - [Host] Fixed outdoor enemies being able to spawn inside the outdoor objects.
-  - [Host] Fixed indoor enemies being unable to spawn in groups. [@ButteryStancakes](https://github.com/ButteryStancakes)
+  - [Host] Fixed indoor enemies being unable to spawn in groups.
   - [Host] Fixed butler knife and metal ordered items not attracting lightning until the next round.
   - [Host] Fixed the hoarder bug not dropping the held item if it's killed too quickly.
   - [Client] Fixed the death sound of Baboon Hawks, Hoarder Bugs & Nutcrackers not working.
     - For additional sound fixes I would suggest using [EnemySoundFixes](https://thunderstore.io/c/lethal-company/p/ButteryStancakes/EnemySoundFixes/).
   - [Client] Fixed the old bird missiles getting stuck if the owning old bird is destroyed by an earth leviathan.
-  - [Client] Fixed old birds being desynced on clients after the first flight. [@digger1213](https://github.com/digger1213)
+  - [Client] Fixed old birds being desynced on clients after the first flight.
+  - [Client] Fixed old bird blowtorch particles not working after the first kill.
 
 - Spike Trap Fixes
   - [Host] Fixed interval spike trap entrance safety period activating when exiting the facility instead of when entering.
@@ -71,7 +75,9 @@ You can get support in any the following places:
 - Supported Game Versions:
   - v55+
 - Works Well With:
-  - N/A
+  - [ButteryFixes](https://thunderstore.io/c/lethal-company/p/ButteryStancakes/ButteryFixes/) - Fixes several miscellaneous gameplay issues.
+  - [EnemySoundFixes](https://thunderstore.io/c/lethal-company/p/ButteryStancakes/EnemySoundFixes/) - Fixes several issues with missing sound effects, or SFX playing when they shouldn't.
+  - [MeleeFixes](https://thunderstore.io/c/lethal-company/p/ButteryStancakes/MeleeFixes/) - Fixes several gamebreaking bugs with shovels and knives.
 - Not Compatible With:
   - Symbiosis
     - This mod does the same thing as the "ItemDeathDrop" config option so I would suggest disabling that option in the Symbiosis config to prevent any issues.
