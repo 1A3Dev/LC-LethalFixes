@@ -2,8 +2,8 @@
 
 - [Client] Fixed old bird blowtorch particles not working after the first kill. [@ButteryStancakes](https://github.com/ButteryStancakes)
 - [Client] Fixed the current vehicle passenger being set to null on the local client.
-- [Client] Fixed steering wheel visually desyncing from the actual steering angle.
-- [Client] Fixed getting stuck in the drivers seat when getting in at the same time as someone else.
+- [Client] Fixed the vehicle steering wheel visually desyncing from the actual steering angle.
+- [Client] Fixed getting stuck in the vehicle drivers seat when getting in at the same time as someone else.
 
 ### 1.1.6
 

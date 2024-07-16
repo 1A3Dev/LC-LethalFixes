@@ -27,8 +27,8 @@ This mod fixes a bunch of common Lethal Company issues:
     - The same as [Align Menu Buttons](https://thunderstore.io/c/lethal-company/p/GoldenGuy1000/Align_Menu_Buttons/).
   - [Client] Fixed other players reloading a shotgun making the item you have in the same hotbar slot that they had their ammo in invisible.
   - [Client] Fixed the current vehicle passenger being set to null on the local client.
-  - [Client] Fixed steering wheel visually desyncing from the actual steering angle.
-  - [Client] Fixed getting stuck in the drivers seat when getting in at the same time as someone else.
+  - [Client] Fixed the vehicle steering wheel visually desyncing from the actual steering angle.
+  - [Client] Fixed getting stuck in the vehicle drivers seat when getting in at the same time as someone else.
   - [Client] Changed Dissonance log levels to fix log spam during voice chat lag.
     - The same as [DissonanceLagFix](https://thunderstore.io/c/lethal-company/p/linkoid/DissonanceLagFix/) but with the ability to change the log level in the config and with all of the log levels changed instead of only the recording one.
     - Mod Default: Error (4)
