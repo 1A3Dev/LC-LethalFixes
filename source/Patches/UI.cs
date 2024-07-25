@@ -21,13 +21,13 @@ namespace LethalFixes.Patches
                 if (Steamworks.SteamApps.CurrentBetaName == "public_beta")
                 {
                     string expectedVersion = null;
-                    if (Steamworks.SteamApps.BuildId == 14953330)
-                    {
-                        expectedVersion = "56";
-                    }
-                    else if (Steamworks.SteamApps.BuildId == 14043096)
+                    if (Steamworks.SteamApps.BuildId <= 14043096)
                     {
                         expectedVersion = "50";
+                    }
+                    else if (Steamworks.SteamApps.BuildId <= 14953330)
+                    {
+                        expectedVersion = "56";
                     }
 
                     if (expectedVersion != null) {
