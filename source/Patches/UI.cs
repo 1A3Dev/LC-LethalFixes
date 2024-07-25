@@ -21,16 +21,13 @@ namespace LethalFixes.Patches
                 if (Steamworks.SteamApps.CurrentBetaName == "public_beta")
                 {
                     string expectedVersion = null;
-                    if (Steamworks.SteamApps.BuildId <= 14043096)
-                    {
-                        expectedVersion = "50";
-                    }
-                    else if (Steamworks.SteamApps.BuildId <= 14953330)
+                    if (Steamworks.SteamApps.BuildId <= 14953330)
                     {
                         expectedVersion = "56";
                     }
 
-                    if (expectedVersion != null) {
+                    if (expectedVersion != null)
+                    {
                         __instance.menuNotificationText.SetText($"You are on an outdated version of v{expectedVersion}. Please ensure beta participation is disabled in the preferences when right clicking the game on Steam!", true);
                         __instance.menuNotificationButtonText.SetText("[ CLOSE ]", true);
                         __instance.menuNotification.SetActive(true);
