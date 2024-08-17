@@ -20,7 +20,7 @@ namespace LethalFixes
     internal class PluginLoader : BaseUnityPlugin
     {
         internal const string modGUID = "Dev1A3.LethalFixes";
-        internal const string modVersion = "1.0.0";
+        internal const string modVersion = "1.1.8";
 
         internal static readonly Harmony harmony = new Harmony(modGUID);
 

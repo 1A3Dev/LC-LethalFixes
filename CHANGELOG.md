@@ -1,3 +1,7 @@
+### 1.1.8
+
+- Changed README to have supported version at v60+
+
 ### 1.1.7
 
 - [Client] Fixed old bird blowtorch particles not working after the first kill. [@ButteryStancakes](https://github.com/ButteryStancakes)

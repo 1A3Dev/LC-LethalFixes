@@ -73,7 +73,7 @@ You can get support in any the following places:
 ### Compatibility
 
 - Supported Game Versions:
-  - v55+
+  - v60+
 - Works Well With:
   - [ButteryFixes](https://thunderstore.io/c/lethal-company/p/ButteryStancakes/ButteryFixes/) - Fixes several miscellaneous gameplay issues.
   - [EnemySoundFixes](https://thunderstore.io/c/lethal-company/p/ButteryStancakes/EnemySoundFixes/) - Fixes several issues with missing sound effects, or SFX playing when they shouldn't.
