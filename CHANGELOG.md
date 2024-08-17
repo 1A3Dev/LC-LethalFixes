@@ -1,6 +1,10 @@
-### 1.1.8
+### 1.1.9
 
 - Changed README to have supported version at v60+
+
+### 1.1.8
+
+- Corrected version check for public beta branch
 
 ### 1.1.7
 
