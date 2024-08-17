@@ -1,28 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using HarmonyLib;
-using Unity.Netcode;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace LethalFixes.Patches
 {
     [HarmonyPatch]
     internal static class Patches_Enemy
     {
-        // [Host] Fixed the hoarder bug not dropping the held item if it's killed too quickly
-        internal static MethodInfo DropItemAndCallDropRPC = AccessTools.Method(typeof(HoarderBugAI), "DropItemAndCallDropRPC");
-        [HarmonyPatch(typeof(HoarderBugAI), "KillEnemy")]
-        [HarmonyPostfix]
-        public static void Fix_HoarderDeathItem(HoarderBugAI __instance)
-        {
-            if (__instance.IsOwner && __instance.heldItem != null)
-            {
-                DropItemAndCallDropRPC?.Invoke(__instance, new object[] { __instance.heldItem.itemGrabbableObject.GetComponent<NetworkObject>(), false });
-            }
-        }
-
         // [Host] Fixed outdoor enemies being able to spawn inside the outdoor objects (rocks/pumpkins etc)
         internal static Dictionary<string, int> outsideObjectWidths = new Dictionary<string, int>();
         internal static List<Transform> cachedOutsideObjects = new List<Transform>();
@@ -135,70 +120,61 @@ namespace LethalFixes.Patches
             return false;
         }
 
-        [HarmonyPatch(typeof(RoundManager), "AssignRandomEnemyToVent")]
-        [HarmonyPostfix]
-        static void AssignRandomEnemyToVent_GroupsOf(RoundManager __instance, EnemyVent vent, int ___currentHour, bool __result)
-        {
-            EnemyType enemy = vent.enemyType;
-            if (__result && enemy.spawnInGroupsOf > 1)
-            {
-                int enemyIndex = vent.enemyTypeIndex;
-                int time = (int)vent.spawnTime;
-                PluginLoader.logSource.LogInfo($"Enemy \"{enemy.enemyName}\" spawned in vent, requesting group of {enemy.spawnInGroupsOf}");
+        //[HarmonyPatch(typeof(RoundManager), "AssignRandomEnemyToVent")]
+        //[HarmonyPostfix]
+        //static void AssignRandomEnemyToVent_GroupsOf(RoundManager __instance, EnemyVent vent, int ___currentHour, bool __result)
+        //{
+        //    EnemyType enemy = vent.enemyType;
+        //    if (__result && enemy.spawnInGroupsOf > 1)
+        //    {
+        //        int enemyIndex = vent.enemyTypeIndex;
+        //        int time = (int)vent.spawnTime;
+        //        PluginLoader.logSource.LogInfo($"Enemy \"{enemy.enemyName}\" spawned in vent, requesting group of {enemy.spawnInGroupsOf}");
 
-                int spawnsLeft = enemy.spawnInGroupsOf - 1;
-                List<EnemyVent> vents = __instance.allEnemyVents.Where(enemyVent => !enemyVent.occupied).ToList();
+        //        int spawnsLeft = enemy.spawnInGroupsOf - 1;
+        //        List<EnemyVent> vents = __instance.allEnemyVents.Where(enemyVent => !enemyVent.occupied).ToList();
 
-                while (spawnsLeft > 0)
-                {
-                    if (vents.Count <= 0) return;
-                    if (enemy.PowerLevel > __instance.currentMaxInsidePower - __instance.currentEnemyPower) return;
+        //        while (spawnsLeft > 0)
+        //        {
+        //            if (vents.Count <= 0) return;
+        //            if (enemy.PowerLevel > __instance.currentMaxInsidePower - __instance.currentEnemyPower) return;
 
-                    EnemyVent vent2 = vents[__instance.AnomalyRandom.Next(0, vents.Count)];
+        //            EnemyVent vent2 = vents[__instance.AnomalyRandom.Next(0, vents.Count)];
 
-                    __instance.currentEnemyPower += enemy.PowerLevel;
-                    vent2.enemyType = enemy;
-                    vent2.enemyTypeIndex = enemyIndex;
-                    vent2.occupied = true;
-                    vent2.spawnTime = time;
-                    if (__instance.timeScript.hour - ___currentHour <= 0)
-                    {
-                        vent2.SyncVentSpawnTimeClientRpc(time, enemyIndex);
-                    }
-                    enemy.numberSpawned++;
+        //            __instance.currentEnemyPower += enemy.PowerLevel;
+        //            vent2.enemyType = enemy;
+        //            vent2.enemyTypeIndex = enemyIndex;
+        //            vent2.occupied = true;
+        //            vent2.spawnTime = time;
+        //            if (__instance.timeScript.hour - ___currentHour <= 0)
+        //            {
+        //                vent2.SyncVentSpawnTimeClientRpc(time, enemyIndex);
+        //            }
+        //            enemy.numberSpawned++;
 
-                    __instance.enemySpawnTimes.Add(time);
-                    vents.Remove(vent2);
+        //            __instance.enemySpawnTimes.Add(time);
+        //            vents.Remove(vent2);
 
-                    PluginLoader.logSource.LogInfo($"Spawned additional \"{enemy.enemyName}\" in vents");
-                    spawnsLeft--;
-                }
+        //            PluginLoader.logSource.LogInfo($"Spawned additional \"{enemy.enemyName}\" in vents");
+        //            spawnsLeft--;
+        //        }
 
-                if (spawnsLeft < enemy.spawnInGroupsOf - 1)
-                    __instance.enemySpawnTimes.Sort();
-            }
-        }
+        //        if (spawnsLeft < enemy.spawnInGroupsOf - 1)
+        //            __instance.enemySpawnTimes.Sort();
+        //    }
+        //}
 
         // [Client] Fix the death sound of Baboon Hawk, Hoarder Bug & Nutcracker being set on the wrong field
         [HarmonyPatch(typeof(EnemyAI), "Start")]
         [HarmonyPostfix]
         public static void EnemyAI_Start(EnemyAI __instance)
         {
-            if (__instance.dieSFX == null && (__instance is BaboonBirdAI || __instance is HoarderBugAI || __instance is NutcrackerEnemyAI))
+            if (__instance.dieSFX == null && __instance.enemyType.deathSFX != null)
             {
-                __instance.dieSFX = __instance.enemyType.deathSFX;
-            }
-        }
-
-        // [Client] Fix a nullref on the RadMech missiles if the RadMech is destroyed
-        [HarmonyPatch(typeof(RadMechMissile), "FixedUpdate")]
-        [HarmonyPatch(typeof(RadMechMissile), "CheckCollision")]
-        [HarmonyPrefix]
-        public static void RadMech_MissileDestroy(RadMechMissile __instance)
-        {
-            if (__instance.RadMechScript == null)
-            {
-                Object.Destroy(__instance.gameObject);
+                if (__instance is BaboonBirdAI || __instance is HoarderBugAI || __instance is NutcrackerEnemyAI)
+                {
+                    __instance.dieSFX = __instance.enemyType.deathSFX;
+                }
             }
         }
 
@@ -223,18 +199,6 @@ namespace LethalFixes.Patches
                     __instance.inSpecialAnimation = false;
                     //PluginLoader.logSource.LogInfo("[RadMech] Set inFlyingMode to false");
                 }
-            }
-        }
-
-        // [Client] Fix RadMech blowtorch particles not working after the first kill
-        [HarmonyPatch(typeof(RadMechAI), "EnableBlowtorch")]
-        [HarmonyPrefix]
-        public static void RadMech_EnableBlowtorch(RadMechAI __instance)
-        {
-            foreach (ParticleSystem particleSystem in __instance.blowtorchParticle.GetComponentsInChildren<ParticleSystem>())
-            {
-                particleSystem.gameObject.SetActive(false);
-                particleSystem.gameObject.SetActive(true);
             }
         }
     }
