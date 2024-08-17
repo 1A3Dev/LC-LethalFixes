@@ -48,12 +48,12 @@
             <HintPath>$(LethalCompanyDir)Lethal Company_Data/Managed/DissonanceVoip.dll</HintPath>
         </Reference>
         <Reference Include="Facepunch.Steamworks.Win64">
-          <HintPath>$(LethalCompanyDir)Lethal Company_Data/Managed/Facepunch.Steamworks.Win64.dll</HintPath>
+            <HintPath>$(LethalCompanyDir)Lethal Company_Data/Managed/Facepunch.Steamworks.Win64.dll</HintPath>
         </Reference>
     </ItemGroup>
 
     <ItemGroup Condition="$(CI) == 'true'">
-        <PackageReference Include="LethalCompany.GameLibs.Steam" Version="55.0.0-beta.0-ngd.0" />
+        <PackageReference Include="LethalCompany.GameLibs.Steam" Version="60.0.0-ngd.0" />
     </ItemGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
