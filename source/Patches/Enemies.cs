@@ -122,50 +122,6 @@ namespace LethalFixes.Patches
             return false;
         }
 
-        //[HarmonyPatch(typeof(RoundManager), "AssignRandomEnemyToVent")]
-        //[HarmonyPostfix]
-        //static void AssignRandomEnemyToVent_GroupsOf(RoundManager __instance, EnemyVent vent, int ___currentHour, bool __result)
-        //{
-        //    EnemyType enemy = vent.enemyType;
-        //    if (__result && enemy.spawnInGroupsOf > 1)
-        //    {
-        //        int enemyIndex = vent.enemyTypeIndex;
-        //        int time = (int)vent.spawnTime;
-        //        PluginLoader.logSource.LogInfo($"Enemy \"{enemy.enemyName}\" spawned in vent, requesting group of {enemy.spawnInGroupsOf}");
-
-        //        int spawnsLeft = enemy.spawnInGroupsOf - 1;
-        //        List<EnemyVent> vents = __instance.allEnemyVents.Where(enemyVent => !enemyVent.occupied).ToList();
-
-        //        while (spawnsLeft > 0)
-        //        {
-        //            if (vents.Count <= 0) return;
-        //            if (enemy.PowerLevel > __instance.currentMaxInsidePower - __instance.currentEnemyPower) return;
-
-        //            EnemyVent vent2 = vents[__instance.AnomalyRandom.Next(0, vents.Count)];
-
-        //            __instance.currentEnemyPower += enemy.PowerLevel;
-        //            vent2.enemyType = enemy;
-        //            vent2.enemyTypeIndex = enemyIndex;
-        //            vent2.occupied = true;
-        //            vent2.spawnTime = time;
-        //            if (__instance.timeScript.hour - ___currentHour <= 0)
-        //            {
-        //                vent2.SyncVentSpawnTimeClientRpc(time, enemyIndex);
-        //            }
-        //            enemy.numberSpawned++;
-
-        //            __instance.enemySpawnTimes.Add(time);
-        //            vents.Remove(vent2);
-
-        //            PluginLoader.logSource.LogInfo($"Spawned additional \"{enemy.enemyName}\" in vents");
-        //            spawnsLeft--;
-        //        }
-
-        //        if (spawnsLeft < enemy.spawnInGroupsOf - 1)
-        //            __instance.enemySpawnTimes.Sort();
-        //    }
-        //}
-
         // [Client] Fix the death sound of Baboon Hawk, Hoarder Bug & Nutcracker being set on the wrong field
         [HarmonyPatch(typeof(EnemyAI), "Start")]
         [HarmonyPostfix]

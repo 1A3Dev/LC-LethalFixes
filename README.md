@@ -39,14 +39,10 @@ This mod fixes a bunch of common Lethal Company issues:
 - Enemy Fixes
 
   - [Host] Fixed outdoor enemies being able to spawn inside the outdoor objects.
-  - [Host] Fixed indoor enemies being unable to spawn in groups.
   - [Host] Fixed butler knife and metal ordered items not attracting lightning until the next round.
-  - [Host] Fixed the hoarder bug not dropping the held item if it's killed too quickly.
   - [Client] Fixed the death sound of Baboon Hawks, Hoarder Bugs & Nutcrackers not working.
     - For additional sound fixes I would suggest using [EnemySoundFixes](https://thunderstore.io/c/lethal-company/p/ButteryStancakes/EnemySoundFixes/).
-  - [Client] Fixed the old bird missiles getting stuck if the owning old bird is destroyed by an earth leviathan.
   - [Client] Fixed old birds being desynced on clients after the first flight.
-  - [Client] Fixed old bird blowtorch particles not working after the first kill.
 
 - Spike Trap Fixes
   - [Host] Fixed interval spike trap entrance safety period activating when exiting the facility instead of when entering.
