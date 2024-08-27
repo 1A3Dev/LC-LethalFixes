@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using System.Reflection.Emit;
 using HarmonyLib;
 using UnityEngine;
 
@@ -198,6 +200,32 @@ namespace LethalFixes.Patches
                     ___inFlyingMode = false;
                     __instance.inSpecialAnimation = false;
                     //PluginLoader.logSource.LogInfo("[RadMech] Set inFlyingMode to false");
+                }
+            }
+        }
+
+        internal static MethodInfo Internal_GoTowardsEntrance = AccessTools.Method(typeof(MaskedPlayerEnemy), "GoTowardsEntrance");
+        internal static MethodInfo Internal_TeleportMaskedEnemyAndSync = AccessTools.Method(typeof(MaskedPlayerEnemy), "TeleportMaskedEnemyAndSync");
+        [HarmonyPatch(typeof(MaskedPlayerEnemy), "DoAIInterval")]
+        [HarmonyPostfix]
+        public static void MaskedEnemy_DoAIInterval(MaskedPlayerEnemy __instance, MineshaftElevatorController ___elevatorScript, float ___interestInShipCooldown, float ___timeAtLastUsingEntrance, Vector3 ___mainEntrancePosition)
+        {
+            if (!__instance.isEnemyDead && __instance.currentBehaviourStateIndex == 0 && ___elevatorScript == null)
+            {
+                if (!(___interestInShipCooldown >= 17f && Vector3.Distance(__instance.transform.position, StartOfRound.Instance.elevatorTransform.position) < 22f))
+                {
+                    if (Time.realtimeSinceStartup - ___timeAtLastUsingEntrance > 3f && !__instance.GetClosestPlayer(!__instance.isOutside, false, false))
+                    {
+                        bool flag2 = (bool)Internal_GoTowardsEntrance?.Invoke(__instance, []);
+                        if (Vector3.Distance(__instance.transform.position, ___mainEntrancePosition) < 1f)
+                        {
+                            Internal_TeleportMaskedEnemyAndSync?.Invoke(__instance, [RoundManager.FindMainEntrancePosition(true, !__instance.isOutside), !__instance.isOutside]);
+                        }
+                        else if (flag2 && __instance.searchForPlayers.inProgress)
+                        {
+                            __instance.StopSearch(__instance.searchForPlayers, true);
+                        }
+                    }
                 }
             }
         }
