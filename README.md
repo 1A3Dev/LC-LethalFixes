@@ -29,6 +29,7 @@ This mod fixes a bunch of common Lethal Company issues:
   - [Client] Fixed the current vehicle passenger being set to null on the local client.
   - [Client] Fixed the vehicle steering wheel visually desyncing from the actual steering angle.
   - [Client] Fixed getting stuck in the vehicle drivers seat when getting in at the same time as someone else.
+  - [Client] Fixed march not using it's level ambience sounds
   - [Client] Changed Dissonance log levels to fix log spam during voice chat lag.
     - The same as [DissonanceLagFix](https://thunderstore.io/c/lethal-company/p/linkoid/DissonanceLagFix/) but with the ability to change the log level in the config and with all of the log levels changed instead of only the recording one.
     - Mod Default: Error (4)
@@ -43,7 +44,6 @@ This mod fixes a bunch of common Lethal Company issues:
   - [Client] Fixed the death sound of Baboon Hawks, Hoarder Bugs & Nutcrackers not working.
     - For additional sound fixes I would suggest using [EnemySoundFixes](https://thunderstore.io/c/lethal-company/p/ButteryStancakes/EnemySoundFixes/).
   - [Client] Fixed old birds being desynced on clients after the first flight.
-  - [Client] Fixed the masked enemy being unable to enter/exit the facility on all interiors except the mineshaft
 
 - Spike Trap Fixes
   - [Host] Fixed interval spike trap entrance safety period activating when exiting the facility instead of when entering.

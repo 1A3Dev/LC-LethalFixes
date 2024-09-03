@@ -393,5 +393,15 @@ namespace LethalFixes
                 __instance.StartCoroutine(CancelSpecialTriggerAnimationsAfterDelay(__instance));
             }
         }
+
+        [HarmonyPatch(typeof(RoundManager), "GenerateNewFloor")]
+        [HarmonyPrefix]
+        public static void Pre_GenerateNewFloor(RoundManager __instance)
+        {
+            if (__instance.currentLevel.dungeonFlowTypes == null || __instance.currentLevel.dungeonFlowTypes.Length != 0)
+            {
+                SoundManager.Instance.currentLevelAmbience = __instance.currentLevel.levelAmbienceClips;
+            }
+        }
     }
 }

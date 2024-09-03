@@ -166,7 +166,7 @@ namespace LethalFixes.Patches
         [HarmonyPostfix]
         public static void MaskedEnemy_DoAIInterval(MaskedPlayerEnemy __instance, MineshaftElevatorController ___elevatorScript, float ___interestInShipCooldown, float ___timeAtLastUsingEntrance, Vector3 ___mainEntrancePosition)
         {
-            if (!__instance.isEnemyDead && __instance.currentBehaviourStateIndex == 0 && ___elevatorScript == null)
+            if (GameNetworkManager.Instance.gameVersionNum < 64 && !__instance.isEnemyDead && __instance.currentBehaviourStateIndex == 0 && ___elevatorScript == null)
             {
                 if (!(___interestInShipCooldown >= 17f && Vector3.Distance(__instance.transform.position, StartOfRound.Instance.elevatorTransform.position) < 22f))
                 {

@@ -1,3 +1,7 @@
+### 1.2.1
+
+- Removed the fix for the masked enemy being unable to enter/exit the facility on v64+
+
 ### 1.2.0
 
 - Fixed the masked enemy being unable to enter/exit the facility on all interiors except the mineshaft
