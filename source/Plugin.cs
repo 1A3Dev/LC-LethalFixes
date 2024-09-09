@@ -88,6 +88,9 @@ namespace LethalFixes
 
     internal class FixesConfig
     {
+        public static List<string> lightShadowItems = new List<string>() { "FancyLamp", "LungApparatus" };
+        public static Dictionary<string, LightShadows> lightShadowDefaults = new Dictionary<string, LightShadows>();
+
         internal static ConfigEntry<bool> ExactItemScan;
         internal static ConfigEntry<bool> PropShadows;
         internal static ConfigEntry<bool> VACSpeakingIndicator;
@@ -111,13 +114,31 @@ namespace LethalFixes
             LogLevelDissonance = PluginLoader.Instance.Config.Bind("Debug", "Log Level (Dissonance)", -1, new ConfigDescription("-1 = Mod Default, 0 = Trace, 1 = Debug, 2 = Info, 3 = Warn, 4 = Error", AVR_LogLevelDissonance));
             AcceptableValueRange<int> AVR_LogLevelNetworkManager = new AcceptableValueRange<int>(-1, 3);
             LogLevelNetworkManager = PluginLoader.Instance.Config.Bind("Debug", "Log Level (NetworkManager)", -1, new ConfigDescription("-1 = Mod Default, 0 = Developer, 1 = Normal, 2 = Error, 3 = Nothing", AVR_LogLevelNetworkManager));
+
+            PropShadows.SettingChanged += (sender, args) => {
+                GrabbableObject[] grabbableObjects = Object.FindObjectsByType<GrabbableObject>(FindObjectsSortMode.None);
+                foreach (GrabbableObject grabbableObject in grabbableObjects)
+                {
+                    if (lightShadowItems.Contains(grabbableObject.itemProperties.name))
+                    {
+                        Light light = grabbableObject.GetComponentInChildren<Light>();
+                        if (light != null)
+                        {
+                            if (!lightShadowDefaults.ContainsKey(grabbableObject.itemProperties.name))
+                            {
+                                lightShadowDefaults.Add(grabbableObject.itemProperties.name, light.shadows);
+                            }
+                            light.shadows = PropShadows.Value ? lightShadowDefaults[grabbableObject.itemProperties.name] : 0;
+                        }
+                    }
+                }
+            };
         }
     }
 
     [HarmonyPatch]
     internal static class Patches_General
     {
-
         //[HarmonyPatch(typeof(GameNetworkManager), "Start")]
         //[HarmonyPostfix]
         //private static void Start_VersionPatches()
@@ -148,37 +169,46 @@ namespace LethalFixes
             __instance.LogLevel = (Unity.Netcode.LogLevel)networkManagerLogLevel;
         }
 
-        public static List<string> removeLightShadows = new List<string>() { "FancyLamp", "LungApparatus" };
-        private static FieldInfo metalObjects = AccessTools.Field(typeof(StormyWeather), "metalObjects");
         [HarmonyPatch(typeof(GrabbableObject), "Start")]
         [HarmonyPostfix]
-        public static void Fix_ItemSpawn(ref GrabbableObject __instance)
+        public static void Fix_OnItemStart(GrabbableObject __instance)
         {
             // [Host] Fixed metal items spawned mid-round not attracting lightning until the next round
             if (__instance.itemProperties.isConductiveMetal)
             {
                 StormyWeather stormyWeather = Object.FindFirstObjectByType<StormyWeather>();
-                if (stormyWeather != null)
+                if (stormyWeather != null && stormyWeather.metalObjects.Count > 0 && !stormyWeather.metalObjects.Contains(__instance))
                 {
-                    List<GrabbableObject> metalObjectsVal = (List<GrabbableObject>)metalObjects.GetValue(stormyWeather);
-                    if (metalObjectsVal.Count > 0)
-                    {
-                        if (!metalObjectsVal.Contains(__instance))
-                        {
-                            metalObjectsVal.Add(__instance);
-                            metalObjects.SetValue(stormyWeather, metalObjectsVal);
-                        }
-                    }
+                    stormyWeather.metalObjects.Add(__instance);
                 }
             }
 
             // [Client] Fixed version of NoPropShadows
-            if (!FixesConfig.PropShadows.Value && removeLightShadows.Contains(__instance.itemProperties.name))
+            if (!FixesConfig.PropShadows.Value && FixesConfig.lightShadowItems.Contains(__instance.itemProperties.name))
             {
                 Light light = __instance.GetComponentInChildren<Light>();
                 if (light != null)
                 {
+                    if (!FixesConfig.lightShadowDefaults.ContainsKey(__instance.itemProperties.name))
+                    {
+                        FixesConfig.lightShadowDefaults.Add(__instance.itemProperties.name, light.shadows);
+                    }
                     light.shadows = 0;
+                }
+            }
+        }
+
+        // [Host] Fixed stormy weather breaking if an item is despawned
+        [HarmonyPatch(typeof(NetworkBehaviour), "OnDestroy")]
+        [HarmonyPostfix]
+        public static void StormyFix_OnItemDestroy(NetworkBehaviour __instance)
+        {
+            if (__instance is GrabbableObject grabbableObject)
+            {
+                StormyWeather stormyWeather = Object.FindFirstObjectByType<StormyWeather>();
+                if (stormyWeather != null && stormyWeather.metalObjects.Contains(grabbableObject))
+                {
+                    stormyWeather.metalObjects.Remove(grabbableObject);
                 }
             }
         }
@@ -186,15 +216,15 @@ namespace LethalFixes
         // [Host] Fixed stormy weather typically only working once each session
         [HarmonyPatch(typeof(StormyWeather), "OnDisable")]
         [HarmonyPostfix]
-        public static void Fix_StormyNullRef(ref StormyWeather __instance)
+        public static void StormyFix_OnDisable(StormyWeather __instance)
         {
-            ((List<GrabbableObject>)metalObjects.GetValue(__instance)).Clear();
+            __instance.metalObjects.Clear();
         }
 
         // [Client] Fixed the start lever cooldown not being reset on the deadline if you initially try routing to a regular moon
         [HarmonyPatch(typeof(StartMatchLever), "BeginHoldingInteractOnLever")]
         [HarmonyPostfix]
-        public static void Fix_LeverDeadline(ref StartMatchLever __instance)
+        public static void Fix_LeverDeadline(StartMatchLever __instance)
         {
             if (TimeOfDay.Instance.daysUntilDeadline <= 0 && __instance.playersManager.inShipPhase && StartOfRound.Instance.currentLevel.planetHasTime)
             {
@@ -300,50 +330,6 @@ namespace LethalFixes
             return (alreadyReplaced ? newInstructions : instructions).AsEnumerable();
         }
 
-        // [Client] Fixed other players reloading a shotgun making the item you have in the same hotbar slot that they had their ammo in invisible
-        [HarmonyPatch(typeof(PlayerControllerB), "DestroyItemInSlot")]
-        [HarmonyTranspiler]
-        private static IEnumerable<CodeInstruction> Shotgun_ReloadItemInvis(IEnumerable<CodeInstruction> instructions)
-        {
-            var newInstructions = new List<CodeInstruction>();
-            bool foundActivatingItem = false;
-            bool addedCall = false;
-            bool alreadyReplaced = false;
-            Label skipLabel = new Label();
-            foreach (var instruction in instructions)
-            {
-                if (!foundActivatingItem && instruction.opcode == OpCodes.Stfld && instruction.operand?.ToString() == "System.Boolean activatingItem")
-                {
-                    foundActivatingItem = true;
-                }
-                else if (!addedCall && foundActivatingItem && instruction.opcode == OpCodes.Call && instruction.operand?.ToString() == "HUDManager get_Instance()")
-                {
-                    addedCall = true;
-
-                    CodeInstruction custIns0 = new CodeInstruction(OpCodes.Ldarg_0);
-                    custIns0.labels.AddRange(instruction.labels);
-                    instruction.labels.Clear();
-                    newInstructions.Add(custIns0);
-
-                    CodeInstruction custIns1 = new CodeInstruction(OpCodes.Call, AccessTools.PropertyGetter(typeof(PlayerControllerB), nameof(PlayerControllerB.IsOwner)));
-                    newInstructions.Add(custIns1);
-                    CodeInstruction custIns2 = new CodeInstruction(OpCodes.Brfalse, skipLabel);
-                    newInstructions.Add(custIns2);
-                }
-                else if (!alreadyReplaced && addedCall && instruction.opcode == OpCodes.Ldarg_0)
-                {
-                    alreadyReplaced = true;
-                    instruction.labels.Add(skipLabel);
-                }
-
-                newInstructions.Add(instruction);
-            }
-
-            if (!alreadyReplaced) PluginLoader.logSource.LogWarning("PlayerControllerB failed to patch DestroyItemInSlot");
-
-            return (alreadyReplaced ? newInstructions : instructions).AsEnumerable();
-        }
-
         // [Host] Rank Fix
         [HarmonyPatch(typeof(HUDManager), "SetSavedValues")]
         [HarmonyPostfix]
@@ -391,16 +377,6 @@ namespace LethalFixes
             if (!__instance.localPlayerInControl)
             {
                 __instance.StartCoroutine(CancelSpecialTriggerAnimationsAfterDelay(__instance));
-            }
-        }
-
-        [HarmonyPatch(typeof(RoundManager), "GenerateNewFloor")]
-        [HarmonyPrefix]
-        public static void Pre_GenerateNewFloor(RoundManager __instance)
-        {
-            if (__instance.currentLevel.dungeonFlowTypes == null || __instance.currentLevel.dungeonFlowTypes.Length != 0)
-            {
-                SoundManager.Instance.currentLevelAmbience = __instance.currentLevel.levelAmbienceClips;
             }
         }
     }

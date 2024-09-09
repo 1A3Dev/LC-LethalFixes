@@ -1,6 +1,12 @@
 ### 1.2.1
 
-- Removed the fix for the masked enemy being unable to enter/exit the facility on v64+
+- Removed fixes for issues that no longer exist in v64:
+  - Made the fix for the masked enemy being unable to enter/exit the facility only apply to v60-v62
+  - Removed the fix for the level ambience not being set
+  - Removed the fix for other players reloading a shotgun making the item you have in the same hotbar slot that they had their ammo in invisible
+- Improved the existing fixes of stormy weather
+- Added an additional fix to ensure stormy weather doesn't break when an item is destroyed
+- Made toggling the prop shadow config option mid-game (using a mod such as LethalConfig) update the shadow for existing props
 
 ### 1.2.0
 
