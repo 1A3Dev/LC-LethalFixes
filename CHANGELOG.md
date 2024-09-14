@@ -1,3 +1,7 @@
+### 1.2.2
+
+- Fixed old birds erroring if the enemy they are targeting gets destroyed by an earth leviathan
+
 ### 1.2.1
 
 - Removed fixes for issues that no longer exist in v64:

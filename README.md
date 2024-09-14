@@ -43,6 +43,7 @@ This mod fixes a bunch of common Lethal Company issues:
   - [Client] Fixed the death sound of Baboon Hawks, Hoarder Bugs & Nutcrackers not working.
     - For additional sound fixes I would suggest using [EnemySoundFixes](https://thunderstore.io/c/lethal-company/p/ButteryStancakes/EnemySoundFixes/).
   - [Client] Fixed old birds being desynced on clients after the first flight.
+  - [Host] Fixed old birds erroring if the enemy they are targeting gets destroyed by an earth leviathan.
 
 - Spike Trap Fixes
   - [Host] Fixed interval spike trap entrance safety period activating when exiting the facility instead of when entering.

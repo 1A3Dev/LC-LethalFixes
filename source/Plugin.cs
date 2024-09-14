@@ -61,6 +61,8 @@ namespace LethalFixes
             harmony.PatchAll(typeof(Patches_Enemy));
             harmony.PatchAll(typeof(Patches_Hazards));
             harmony.PatchAll(typeof(Patches_UI));
+
+            logSource.LogInfo("Patches Loaded");
         }
 
         public void BindConfig<T>(ref ConfigEntry<T> config, string section, string key, T defaultValue, string description = "")

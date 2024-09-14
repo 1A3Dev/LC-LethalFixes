@@ -183,5 +183,30 @@ namespace LethalFixes.Patches
                 }
             }
         }
+
+        public static void RadMech_FixThreatTransform(RadMechAI __instance)
+        {
+            if (!__instance.focusedThreatTransform && __instance.currentBehaviourStateIndex == 1)
+            {
+                GameObject emptObject = GameObject.Find("RadMechTarget") ?? new GameObject("RadMechTarget");
+                emptObject.transform.position = new Vector3(0f, -5000f, 0f);
+                __instance.focusedThreatTransform = emptObject.transform;
+                //PluginLoader.logSource.LogInfo("[RadMech] Set focusedThreatTransform to temp transform");
+            }
+        }
+
+        [HarmonyPatch(typeof(RadMechAI), "MoveTowardsThreat")]
+        [HarmonyPrefix]
+        public static void RadMechAI_MoveTowardsThreat(RadMechAI __instance)
+        {
+            RadMech_FixThreatTransform(__instance);
+        }
+
+        [HarmonyPatch(typeof(RadMechAI), "Update")]
+        [HarmonyPrefix]
+        public static void RadMechAI_Update(RadMechAI __instance)
+        {
+            RadMech_FixThreatTransform(__instance);
+        }
     }
 }
