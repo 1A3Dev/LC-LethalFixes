@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Reflection.Emit;
 using BepInEx;
 using BepInEx.Configuration;
@@ -20,7 +19,7 @@ namespace LethalFixes
     internal class PluginLoader : BaseUnityPlugin
     {
         internal const string modGUID = "Dev1A3.LethalFixes";
-        internal const string modVersion = "1.1.9";
+        internal const string modVersion = "1.2.2";
 
         internal static readonly Harmony harmony = new Harmony(modGUID);
 
