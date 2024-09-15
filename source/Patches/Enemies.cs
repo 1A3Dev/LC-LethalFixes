@@ -186,7 +186,7 @@ namespace LethalFixes.Patches
 
         public static void RadMech_FixThreatTransform(RadMechAI __instance)
         {
-            if (!__instance.focusedThreatTransform && __instance.currentBehaviourStateIndex == 1)
+            if (!__instance.focusedThreatTransform && __instance.currentBehaviourStateIndex == 1 && GameNetworkManager.Instance.gameVersionNum < 64)
             {
                 GameObject emptObject = GameObject.Find("RadMechTarget") ?? new GameObject("RadMechTarget");
                 emptObject.transform.position = new Vector3(0f, -5000f, 0f);
