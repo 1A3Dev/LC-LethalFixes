@@ -15,13 +15,10 @@ using Object = UnityEngine.Object;
 
 namespace LethalFixes
 {
-    [BepInPlugin(modGUID, "LethalFixes", modVersion)]
+    [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
     internal class PluginLoader : BaseUnityPlugin
     {
-        internal const string modGUID = "Dev1A3.LethalFixes";
-        internal const string modVersion = "1.2.2";
-
-        internal static readonly Harmony harmony = new Harmony(modGUID);
+        internal static readonly Harmony harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
 
         private static bool initialized;
 

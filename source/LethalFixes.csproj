@@ -1,7 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <AssemblyName>LethalFixes</AssemblyName>
+        <AssemblyName>uk.1a3.lethalfixes</AssemblyName>
+        <Product>LethalFixes</Product>
         <TargetFramework>netstandard2.1</TargetFramework>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
