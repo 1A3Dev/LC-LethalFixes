@@ -169,6 +169,7 @@ namespace LethalFixes
 
         [HarmonyPatch(typeof(GrabbableObject), "Start")]
         [HarmonyPostfix]
+        [HarmonyPriority(Priority.First)]
         public static void Fix_OnItemStart(GrabbableObject __instance)
         {
             // [Host] Fixed metal items spawned mid-round not attracting lightning until the next round

@@ -1,3 +1,11 @@
+### 1.2.4
+
+- Fixed compatibility with the ProtectConductiveItems mod
+
+### 1.2.3
+
+- Corrected the public beta outdated version check
+
 ### 1.2.2
 
 - Fixed old birds erroring if the enemy they are targeting gets destroyed by an earth leviathan
