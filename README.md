@@ -35,6 +35,7 @@ This mod fixes a bunch of common Lethal Company issues:
   - [Client] Changed NetworkManager log level to fix log spam from RPCs.
     - The same as [FixRPCLag](https://thunderstore.io/c/lethal-company/p/Bobbie/FixRPCLag/) but with the ability to change the log level in the config.
     - Mod Default: Normal (1)
+  - [Client] Fixed indoor fog persisting across multiple rounds
 
 - Enemy Fixes
 
