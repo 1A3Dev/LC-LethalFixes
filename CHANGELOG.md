@@ -1,7 +1,3 @@
-### 1.2.5
-
-- Fixed indoor fog persisting across multiple rounds
-
 ### 1.2.4
 
 - Fixed compatibility with the ProtectConductiveItems mod

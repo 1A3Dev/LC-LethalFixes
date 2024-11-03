@@ -378,13 +378,5 @@ namespace LethalFixes
                 __instance.StartCoroutine(CancelSpecialTriggerAnimationsAfterDelay(__instance));
             }
         }
-        
-        // [Client] Fixed indoor fog persisting across multiple rounds
-        [HarmonyPatch(typeof(RoundManager), "RefreshEnemiesList")]
-        [HarmonyPrefix]
-        public static void RefreshEnemiesList(RoundManager __instance)
-        {
-            __instance.indoorFog.gameObject.SetActive(false);
-        }
     }
 }
