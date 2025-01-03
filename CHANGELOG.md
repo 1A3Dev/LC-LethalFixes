@@ -1,3 +1,7 @@
+### 1.2.5
+
+- Fixed the terminal scan command including dead bodies in the scrap counts
+
 ### 1.2.4
 
 - Fixed compatibility with the ProtectConductiveItems mod

@@ -19,6 +19,7 @@ This mod fixes a bunch of common Lethal Company issues:
   - [Host] Fixed stormy weather breaking after an item is destroyed.
   - [Client] Fixed the start lever cooldown not being reset on the deadline when attempting to route to the company after attempting to go to a regular moon.
   - [Client] Fixed the terminal scan command approximate value calculation to use the scrapValueMultiplier and exclude items inside the ship.
+  - [Client] Fixed the terminal scan command including dead bodies in the scrap counts.
   - [Client] Removed shadows from the fancy lamp & apparatus to improve performance.
     - The same as [NoPropShadows](https://thunderstore.io/c/lethal-company/p/Glitch/NoPropShadows/) but without the requirement of having to re-join the lobby for the shadows to be removed from newly spawned props.
   - [Client] Made PTT speaking indicator only visible when speaking.

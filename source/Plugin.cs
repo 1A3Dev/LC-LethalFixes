@@ -250,7 +250,7 @@ namespace LethalFixes
                 GrabbableObject[] array = Object.FindObjectsByType<GrabbableObject>(FindObjectsSortMode.InstanceID);
                 for (int n = 0; n < array.Length; n++)
                 {
-                    if (array[n].itemProperties.isScrap)
+                    if (array[n].itemProperties.isScrap && array[n] is not RagdollGrabbableObject)
                     {
                         if (!array[n].isInShipRoom && !array[n].isInElevator)
                         {
