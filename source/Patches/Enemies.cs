@@ -20,7 +20,7 @@ namespace LethalFixes.Patches
             // Block Spawning In The Ship
             for (int j = 0; j < spawnDenialPoints.Length; j++)
             {
-                if (Vector3.Distance(spawnPosition, spawnDenialPoints[j].transform.position) < 16f)
+                if (spawnDenialPoints[j] && Vector3.Distance(spawnPosition, spawnDenialPoints[j].transform.position) < 16f)
                 {
                     shouldDeny = true;
                     break;

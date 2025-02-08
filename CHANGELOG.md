@@ -1,3 +1,7 @@
+### 1.2.6
+
+- Fixed NullReferenceException if the moon has a null spawn denial point.
+
 ### 1.2.5
 
 - Fixed the terminal scan command including dead bodies in the scrap counts
@@ -108,7 +112,7 @@
 
 ### 1.0.5
 
-- Fixed exception if the map has a null outside object.
+- Fixed exception if the moon has a null outside object.
 - Added a config option to choose the Dissonance (Voice Chat) log level.
 - Added a config option to choose the NetworkManager (RPC) log level.
 
