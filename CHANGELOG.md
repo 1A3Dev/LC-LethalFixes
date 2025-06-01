@@ -1,3 +1,7 @@
+### 1.2.7
+
+- Re-built to fix exception on v70+
+
 ### 1.2.6
 
 - Fixed NullReferenceException if the moon has a null spawn denial point.
