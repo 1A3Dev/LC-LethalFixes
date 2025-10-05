@@ -1,3 +1,7 @@
+### 1.2.8
+
+- Re-built for v73
+
 ### 1.2.7
 
 - Re-built to fix exception on v70+
