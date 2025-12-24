@@ -208,5 +208,18 @@ namespace LethalFixes.Patches
         {
             RadMech_FixThreatTransform(__instance);
         }
+        
+        // Fix blob not roaming if no players are nearby
+        [HarmonyPatch(typeof(EnemyAI), "StartSearch")]
+        [HarmonyPrefix]
+        public static bool EnemyAI_StartSearch(EnemyAI __instance, Vector3 startOfSearch, AISearchRoutine newSearch = null)
+        {
+            if (__instance is BlobAI && newSearch != null && newSearch.inProgress)
+            {
+                return false;
+            }
+
+            return true;
+        }
     }
 }

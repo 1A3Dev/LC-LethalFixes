@@ -1,3 +1,7 @@
+### 1.2.9
+
+- Fixed the hygrodere getting stuck at the entrance when all players exit.
+
 ### 1.2.8
 
 - Re-built for v73
