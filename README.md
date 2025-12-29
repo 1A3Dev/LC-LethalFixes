@@ -52,6 +52,7 @@ This mod fixes a bunch of common Lethal Company issues:
   - [Host] Fixed interval spike trap entrance safety period not preventing death if the trap slams at the exact same time that you enter.
   - [Client] Fixed player detection spike trap entrance safety period not preventing death if the trap slams at the exact same time that you enter.
   - [Client] Fixed spike traps having no indication when disabled via the terminal (they now play the landmine deactivate sound and have the light emissive disabled).
+  - [Client] Fixed player detection spike trap inverse teleport safety period lasting for 0.2s instead of 1.2s.
 
 ### Configuration
 

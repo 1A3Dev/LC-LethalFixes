@@ -65,29 +65,12 @@ namespace LethalFixes
         {
             config = Config.Bind<T>(section, key, defaultValue, description);
         }
-
-        public static int GetCurrentGameVersion()
-        {
-            int currentVer = GameNetworkManager.Instance.gameVersionNum;
-            if (currentVer >= 16480)
-            {
-                return currentVer - 16440;
-            }
-            else if (currentVer >= 9999)
-            {
-                return currentVer - 9950;
-            }
-            else
-            {
-                return currentVer;
-            }
-        }
     }
 
     internal class FixesConfig
     {
-        public static List<string> lightShadowItems = new List<string>() { "FancyLamp", "LungApparatus" };
-        public static Dictionary<string, LightShadows> lightShadowDefaults = new Dictionary<string, LightShadows>();
+        public static List<string> lightShadowItems = new() { "FancyLamp", "LungApparatus" };
+        public static Dictionary<string, LightShadows> lightShadowDefaults = new();
 
         internal static ConfigEntry<bool> ExactItemScan;
         internal static ConfigEntry<bool> PropShadows;
@@ -95,7 +78,6 @@ namespace LethalFixes
         internal static ConfigEntry<bool> ModTerminalScan;
         internal static ConfigEntry<bool> SpikeTrapActivateSound;
         internal static ConfigEntry<bool> SpikeTrapDeactivateSound;
-        internal static ConfigEntry<bool> SpikeTrapSafetyInverse;
         internal static ConfigEntry<int> LogLevelDissonance;
         internal static ConfigEntry<int> LogLevelNetworkManager;
         internal static void InitConfig()
@@ -106,7 +88,6 @@ namespace LethalFixes
             PluginLoader.Instance.BindConfig(ref ModTerminalScan, "Compatibility", "Terminal Scan Command", true, "Should the terminal scan command be modified by this mod?");
             PluginLoader.Instance.BindConfig(ref SpikeTrapActivateSound, "Spike Trap", "Sound On Enable", false, "Should spike traps make a sound when re-enabled after being disabled via the terminal?");
             PluginLoader.Instance.BindConfig(ref SpikeTrapDeactivateSound, "Spike Trap", "Sound On Disable", true, "Should spike traps make a sound when disabled via the terminal?");
-            PluginLoader.Instance.BindConfig(ref SpikeTrapSafetyInverse, "Spike Trap", "Inverse Teleport Safety", false, "Should spike traps have the safe period if a player inverse teleports underneath?");
 
             AcceptableValueRange<int> AVR_LogLevelDissonance = new AcceptableValueRange<int>(-1, 4);
             LogLevelDissonance = PluginLoader.Instance.Config.Bind("Debug", "Log Level (Dissonance)", -1, new ConfigDescription("-1 = Mod Default, 0 = Trace, 1 = Debug, 2 = Info, 3 = Warn, 4 = Error", AVR_LogLevelDissonance));

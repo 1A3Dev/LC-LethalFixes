@@ -103,5 +103,18 @@ namespace LethalFixes.Patches
                 trapLight.enabled = enabled;
             }
         }
+        
+        // [Client] Increased spike trap safety period for inverse from 0.2s to 1.2s
+        [HarmonyPatch(typeof(ShipTeleporter), "SpikeTrapsReactToInverseTeleport")]
+        [HarmonyPrefix]
+        public static bool ShipTeleporter_SpikeTrapsReactToInverseTeleport()
+        {
+            foreach(SpikeRoofTrap spikeRoofTrap in Object.FindObjectsByType<SpikeRoofTrap>(FindObjectsSortMode.None))
+            {
+                spikeRoofTrap.timeSinceMovingUp = Time.realtimeSinceStartup;
+            }
+
+            return false;
+        }
     }
 }

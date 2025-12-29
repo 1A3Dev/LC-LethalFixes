@@ -1,3 +1,7 @@
+### 1.3.0
+
+- Fixed player detection spike trap inverse teleport safety period lasting for 0.2s instead of 1.2s.
+
 ### 1.2.9
 
 - Fixed the hygrodere getting stuck at the entrance when all players exit.
