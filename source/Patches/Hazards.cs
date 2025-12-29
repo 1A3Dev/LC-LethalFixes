@@ -111,7 +111,7 @@ namespace LethalFixes.Patches
         {
             foreach(SpikeRoofTrap spikeRoofTrap in Object.FindObjectsByType<SpikeRoofTrap>(FindObjectsSortMode.None))
             {
-                spikeRoofTrap.timeSinceMovingUp = Time.realtimeSinceStartup;
+                spikeRoofTrap.timeSinceMovingUp = Time.realtimeSinceStartup + 1;
             }
 
             return false;
