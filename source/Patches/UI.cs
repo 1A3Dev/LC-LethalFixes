@@ -11,32 +11,6 @@ namespace LethalFixes.Patches
     [HarmonyPatch]
     internal static class Patches_UI
     {
-        // [Client] Show outdated warning for people still on the public beta
-        [HarmonyPatch(typeof(MenuManager), "Awake")]
-        [HarmonyPostfix]
-        public static void MenuManager_Awake(MenuManager __instance)
-        {
-            try
-            {
-                if (Steamworks.SteamApps.CurrentBetaName == "public_beta")
-                {
-                    string expectedVersion = null;
-                    if (Steamworks.SteamApps.BuildId <= 15598010)
-                    {
-                        expectedVersion = "64";
-                    }
-
-                    if (expectedVersion != null)
-                    {
-                        __instance.menuNotificationText.SetText($"You are on an outdated version of v{expectedVersion}. Please ensure beta participation is disabled in the preferences when right clicking the game on Steam!", true);
-                        __instance.menuNotificationButtonText.SetText("[ CLOSE ]", true);
-                        __instance.menuNotification.SetActive(true);
-                    }
-                }
-            }
-            catch { }
-        }
-
         // [Client] Speaking indicator for voice activity
         [HarmonyPatch(typeof(StartOfRound), "DetectVoiceChatAmplitude")]
         [HarmonyPrefix]
@@ -46,7 +20,7 @@ namespace LethalFixes.Patches
             if (__instance.voiceChatModule != null)
             {
                 Dissonance.VoicePlayerState voicePlayerState = __instance.voiceChatModule.FindPlayer(__instance.voiceChatModule.LocalPlayerName);
-                HUDManager.Instance.PTTIcon.enabled = voicePlayerState.IsSpeaking && IngamePlayerSettings.Instance.settings.micEnabled && !__instance.voiceChatModule.IsMuted && (IngamePlayerSettings.Instance.settings.pushToTalk || FixesConfig.VACSpeakingIndicator.Value);
+                HUDManager.Instance.PTTIcon.enabled = voicePlayerState != null && voicePlayerState.IsSpeaking && IngamePlayerSettings.Instance.settings.micEnabled && !__instance.voiceChatModule.IsMuted && (IngamePlayerSettings.Instance.settings.pushToTalk || FixesConfig.VACSpeakingIndicator.Value);
             }
         }
 

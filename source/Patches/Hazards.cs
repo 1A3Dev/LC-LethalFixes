@@ -8,42 +8,8 @@ namespace LethalFixes.Patches
     [HarmonyPatch]
     internal static class Patches_Hazards
     {
-        // [Host] Fixed spike trap entrance safety period activating when exiting the facility instead of when entering
-        [HarmonyPatch(typeof(SpikeRoofTrap), "GetNearEntrance")]
-        [HarmonyPrefix]
-        public static bool GetNearEntrance(SpikeRoofTrap __instance, ref bool __result, ref EntranceTeleport ___nearEntrance)
-        {
-            bool flag = false;
-            EntranceTeleport[] array = Object.FindObjectsByType<EntranceTeleport>(FindObjectsSortMode.None);
-            for (int i = 0; i < array.Length; i++)
-            {
-                if (!array[i].isEntranceToBuilding && Vector3.Distance(__instance.spikeTrapAudio.transform.position, array[i].entrancePoint.position) < 7f)
-                {
-                    flag = true;
-                    ___nearEntrance = array[i];
-                }
-            }
-
-            bool replaced = false;
-            if (flag)
-            {
-                for (int j = 0; j < array.Length; j++)
-                {
-                    if (array[j].entrancePoint == ___nearEntrance.exitPoint)
-                    {
-                        ___nearEntrance = array[j];
-                        replaced = true;
-                    }
-                }
-            }
-
-            __result = replaced;
-
-            return false;
-        }
-
-        internal static AudioClip spikeTrapActivateSound = null;
-        internal static AudioClip spikeTrapDeactivateSound = null;
+        internal static AudioClip spikeTrapActivateSound;
+        internal static AudioClip spikeTrapDeactivateSound;
         [HarmonyPatch(typeof(SpikeRoofTrap), "Start")]
         [HarmonyPostfix]
         public static void Fix_SpikeTrapSafety_Start(ref SpikeRoofTrap __instance)
