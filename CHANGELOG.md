@@ -1,3 +1,8 @@
+### 1.3.1
+
+- README now shows which mod version should be used for each game version
+- Removed unnecessary fixes for v80
+
 ### 1.3.0
 
 - Fixed player detection spike trap inverse teleport safety period lasting for 0.2s instead of 1.2s.
