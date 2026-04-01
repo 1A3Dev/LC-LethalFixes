@@ -10,7 +10,6 @@
 This mod fixes a bunch of common Lethal Company issues:
 
 - General Fixes
-
   - [Host] Made the debug menu test room & invincibility toggles show whether they are enabled/disabled.
   - [Host] Fixed clients seeing the default disconnect message when kicked instead of a kick message.
   - [Host] Fixed the host's rank not syncing to clients on initial join.
@@ -38,7 +37,6 @@ This mod fixes a bunch of common Lethal Company issues:
     - Mod Default: Normal (1)
 
 - Enemy Fixes
-
   - [Host] Fixed outdoor enemies being able to spawn inside the outdoor objects.
   - [Host] Fixed butler knife and metal ordered items not attracting lightning until the next round.
   - [Client] Fixed the death sound of Baboon Hawks, Hoarder Bugs & Nutcrackers not working.
@@ -70,10 +68,16 @@ You can get support in any the following places:
 - [GitHub Issues](https://github.com/1A3Dev/LC-LethalFixes/issues)
 - [My Discord Server](https://discord.gg/CKqVFPRtKp)
 
+### Latest Versions
+
+| Mod Version | Game Version |
+| ----------- | ------------ |
+| v1.3.1      | v80          |
+| v1.3.0      | v73          |
+| v1.2.7      | v70 - v72    |
+
 ### Compatibility
 
-- Supported Game Versions:
-  - v60+
 - Works Well With:
   - [ButteryFixes](https://thunderstore.io/c/lethal-company/p/ButteryStancakes/ButteryFixes/) - Fixes several miscellaneous gameplay issues.
   - [EnemySoundFixes](https://thunderstore.io/c/lethal-company/p/ButteryStancakes/EnemySoundFixes/) - Fixes several issues with missing sound effects, or SFX playing when they shouldn't.
