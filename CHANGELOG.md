@@ -1,3 +1,7 @@
+### 1.3.2
+
+- Re-built on v80
+
 ### 1.3.1
 
 - README now shows which mod version should be used for each game version

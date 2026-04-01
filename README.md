@@ -70,7 +70,7 @@ You can get support in any the following places:
 
 | Mod Version | Game Version |
 | ----------- | ------------ |
-| v1.3.1      | v80          |
+| v1.3.2      | v80          |
 | v1.3.0      | v73          |
 | v1.2.7      | v70 - v72    |
 
