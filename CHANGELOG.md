@@ -1,3 +1,8 @@
+### 1.3.3
+
+- Fixed speaking indicator not showing when using voice activity
+- Fixed terminal scan command not working correctly whilst in orbit
+
 ### 1.3.2
 
 - Re-built on v80
