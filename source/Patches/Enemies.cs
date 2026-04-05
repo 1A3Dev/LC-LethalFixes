@@ -136,30 +136,6 @@ namespace LethalFixes.Patches
             }
         }
 
-        // [Client] Fix RadMech teleporting to flight destinations on client for every flight after the first
-        // [Client] Fix RadMech desyncing on clients (invisible robot bug)
-        [HarmonyPatch(typeof(RadMechAI), "Update")]
-        [HarmonyPrefix]
-        public static void RadMech_SetFinishingFlight(RadMechAI __instance, ref bool ___finishingFlight, ref bool ___inFlyingMode)
-        {
-            if (!__instance.IsServer && __instance.previousBehaviourStateIndex == 2 && __instance.currentBehaviourStateIndex != 2)
-            {
-                // Fix teleporting on the next flight
-                if (___finishingFlight)
-                {
-                    ___finishingFlight = false;
-                    //PluginLoader.logSource.LogInfo("[RadMech] Set finishingFlight to false");
-                }
-                // inFlyingMode is true but we're not in the flying state - desync bug happened
-                if (___inFlyingMode)
-                {
-                    ___inFlyingMode = false;
-                    __instance.inSpecialAnimation = false;
-                    //PluginLoader.logSource.LogInfo("[RadMech] Set inFlyingMode to false");
-                }
-            }
-        }
-
         [HarmonyPatch(typeof(MaskedPlayerEnemy), "DoAIInterval")]
         [HarmonyPostfix]
         public static void MaskedEnemy_DoAIInterval(MaskedPlayerEnemy __instance)
