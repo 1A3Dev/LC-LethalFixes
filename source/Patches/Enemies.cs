@@ -52,7 +52,7 @@ namespace LethalFixes.Patches
             outsideObjectWidths.Clear();
             cachedOutsideObjects.Clear();
 
-            if (__instance.currentLevel.spawnableMapObjects.Length >= 1)
+            if (__instance.currentLevel.indoorMapHazards.Length >= 1)
             {
                 SpawnableOutsideObject[] outsideObjectsRaw = __instance.currentLevel.spawnableOutsideObjects.Select(x => x.spawnableObject).ToArray();
                 foreach (SpawnableOutsideObject outsideObject in outsideObjectsRaw)
