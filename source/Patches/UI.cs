@@ -12,15 +12,21 @@ namespace LethalFixes.Patches
     internal static class Patches_UI
     {
         // [Client] Speaking indicator for voice activity
-        [HarmonyPatch(typeof(StartOfRound), "DetectVoiceChatAmplitude")]
-        [HarmonyPrefix]
+        [HarmonyPatch(typeof(StartOfRound), "Update")]
+        [HarmonyPostfix]
         [HarmonyWrapSafe]
         public static void SpeakingIndicator_VAC(StartOfRound __instance)
         {
-            if (__instance.voiceChatModule != null)
+            if (FixesConfig.VACSpeakingIndicator.Value
+                && GameNetworkManager.Instance && GameNetworkManager.Instance.localPlayerController
+                && !IngamePlayerSettings.Instance.settings.pushToTalk && IngamePlayerSettings.Instance.settings.micEnabled
+                && __instance.voiceChatModule != null && !__instance.voiceChatModule.IsMuted)
             {
                 Dissonance.VoicePlayerState voicePlayerState = __instance.voiceChatModule.FindPlayer(__instance.voiceChatModule.LocalPlayerName);
-                HUDManager.Instance.PTTIcon.enabled = voicePlayerState != null && voicePlayerState.IsSpeaking && IngamePlayerSettings.Instance.settings.micEnabled && !__instance.voiceChatModule.IsMuted && (IngamePlayerSettings.Instance.settings.pushToTalk || FixesConfig.VACSpeakingIndicator.Value);
+                if (voicePlayerState != null && voicePlayerState.IsSpeaking)
+                {
+                    HUDManager.Instance.PTTIcon.enabled = true;
+                }
             }
         }
 

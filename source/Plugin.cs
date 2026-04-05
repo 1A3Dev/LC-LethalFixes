@@ -221,7 +221,7 @@ namespace LethalFixes
         [HarmonyPrefix]
         public static void Fix_TerminalScan(ref string modifiedDisplayText)
         {
-            if (FixesConfig.ModTerminalScan.Value && modifiedDisplayText.Contains("[scanForItems]"))
+            if (FixesConfig.ModTerminalScan.Value && modifiedDisplayText.Contains("[scanForItems]") && !StartOfRound.Instance.inShipPhase)
             {
                 System.Random random = new System.Random(StartOfRound.Instance.randomMapSeed + 91);
                 int outsideTotal = 0;
@@ -265,9 +265,6 @@ namespace LethalFixes
                 }
                 else
                 {
-                    //int randomMultiplier = 1000;
-                    //outsideValue = Math.Max(0, random.Next(outsideValue - randomMultiplier, outsideValue + randomMultiplier));
-                    //insideValue = Math.Max(0, random.Next(insideValue - randomMultiplier, insideValue + randomMultiplier));
                     modifiedDisplayText = modifiedDisplayText.Replace("[scanForItems]", string.Format("There are {0} objects outside the ship, totalling at an approximate value of ${1}.", outsideTotal, outsideValue));
                 }
             }
